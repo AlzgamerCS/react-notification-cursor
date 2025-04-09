@@ -3,26 +3,19 @@ import { Box, Button, TextField, Typography, Paper, Link } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import backgroundImage from "../assets/login_background.jpg";
 
-const Login = () => {
+const ForgotPassword = () => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
+  const [email, setEmail] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement actual authentication
-    // For now, just redirect to dashboard
-    navigate("/dashboard");
+    // TODO: Implement password reset logic
+    // For now, just show a success message or redirect
+    console.log("Password reset link sent to:", email);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setEmail(e.target.value);
   };
 
   return (
@@ -59,20 +52,21 @@ const Login = () => {
         }}
       >
         <Typography component="h1" variant="h5" align="center" gutterBottom>
-          <strong>Log In to Automated Notification System</strong>
+          <strong>Forgot Your Password?</strong>
         </Typography>
         <Typography
           component="h2"
           variant="subtitle2"
           align="center"
           gutterBottom
+          sx={{ mb: 4 }}
         >
-          Securely manage document expirations and notifications
+          Enter your email, and we will send you a reset link.
         </Typography>
         <Box
           component="form"
           onSubmit={handleSubmit}
-          sx={{ mt: 8, width: "90%" }}
+          sx={{ mt: 2, width: "90%" }}
         >
           <TextField
             margin="normal"
@@ -83,19 +77,7 @@ const Login = () => {
             name="email"
             autoComplete="email"
             autoFocus
-            value={formData.email}
-            onChange={handleChange}
-          />
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            name="password"
-            label="Password"
-            type="password"
-            id="password"
-            autoComplete="current-password"
-            value={formData.password}
+            value={email}
             onChange={handleChange}
           />
           <Button
@@ -104,18 +86,18 @@ const Login = () => {
             variant="contained"
             sx={{ mt: 3, mb: 2 }}
           >
-            Log In
+            Send Reset Link
           </Button>
           <Box sx={{ textAlign: "center" }}>
             <Link
-              href="/forgot-password"
+              href="/login"
               variant="body2"
               onClick={(e) => {
                 e.preventDefault();
-                navigate("/forgot-password");
+                navigate("/login");
               }}
             >
-              Can't log in?
+              Back To Log In
             </Link>
           </Box>
         </Box>
@@ -124,4 +106,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default ForgotPassword;

@@ -1,12 +1,18 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { lazy, Suspense } from 'react';
-import MainLayout from './layouts/MainLayout';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import { lazy, Suspense } from "react";
+import MainLayout from "./layouts/MainLayout";
 
 // Lazy load pages
-const Login = lazy(() => import('./pages/Login'));
-const Dashboard = lazy(() => import('./pages/Dashboard'));
-const Documents = lazy(() => import('./pages/Documents'));
-const NotFound = lazy(() => import('./pages/NotFound'));
+const Login = lazy(() => import("./pages/Login"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Documents = lazy(() => import("./pages/Documents"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 
 function App() {
   return (
@@ -15,6 +21,7 @@ function App() {
         <Routes>
           {/* Public routes */}
           <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
 
           {/* Protected routes */}
           <Route element={<MainLayout />}>
