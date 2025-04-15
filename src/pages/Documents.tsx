@@ -11,74 +11,74 @@ import {
   Button,
   TextField,
   InputAdornment,
-} from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
-import AddIcon from '@mui/icons-material/Add';
-import { useState } from 'react';
+} from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
+import AddIcon from "@mui/icons-material/Add";
+import { useState } from "react";
 
 // Mock data
 const mockDocuments = [
   {
     id: 1,
-    name: 'Business License',
-    type: 'License',
-    department: 'Operations',
-    expiryDate: '2024-06-15',
-    status: 'urgent',
-    assignedTo: 'John Doe',
+    name: "Business License",
+    type: "License",
+    department: "Operations",
+    expiryDate: "2024-06-15",
+    status: "urgent",
+    assignedTo: "John Doe",
   },
   {
     id: 2,
-    name: 'Insurance Policy',
-    type: 'Insurance',
-    department: 'Legal',
-    expiryDate: '2024-08-20',
-    status: 'soon',
-    assignedTo: 'Jane Smith',
+    name: "Insurance Policy",
+    type: "Insurance",
+    department: "Legal",
+    expiryDate: "2024-08-20",
+    status: "soon",
+    assignedTo: "Jane Smith",
   },
   {
     id: 3,
-    name: 'Health Certificate',
-    type: 'Certificate',
-    department: 'HR',
-    expiryDate: '2024-12-31',
-    status: 'good',
-    assignedTo: 'Mike Johnson',
+    name: "Health Certificate",
+    type: "Certificate",
+    department: "HR",
+    expiryDate: "2024-12-31",
+    status: "good",
+    assignedTo: "Mike Johnson",
   },
 ];
 
 const Documents = () => {
   const [documents] = useState(mockDocuments);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'urgent':
-        return '#ff1744';
-      case 'soon':
-        return '#ffab00';
-      case 'good':
-        return '#00c853';
+      case "urgent":
+        return "#ff1744";
+      case "soon":
+        return "#ffab00";
+      case "good":
+        return "#00c853";
       default:
-        return '#757575';
+        return "#757575";
     }
   };
 
-  const filteredDocuments = documents.filter(doc =>
+  const filteredDocuments = documents.filter((doc) =>
     Object.values(doc).some(
-      value =>
-        typeof value === 'string' &&
+      (value) =>
+        typeof value === "string" &&
         value.toLowerCase().includes(searchTerm.toLowerCase())
     )
   );
 
   return (
-    <Box sx={{ flexGrow: 1 }}>
+    <Box sx={{ flexGrow: 1, pt: 8 }}>
       <Box
         sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
           mb: 3,
         }}
       >
@@ -93,7 +93,7 @@ const Documents = () => {
         variant="outlined"
         placeholder="Search documents..."
         value={searchTerm}
-        onChange={e => setSearchTerm(e.target.value)}
+        onChange={(e) => setSearchTerm(e.target.value)}
         sx={{ mb: 3 }}
         InputProps={{
           startAdornment: (
@@ -117,7 +117,7 @@ const Documents = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredDocuments.map(doc => (
+            {filteredDocuments.map((doc) => (
               <TableRow key={doc.id} hover>
                 <TableCell>{doc.name}</TableCell>
                 <TableCell>{doc.type}</TableCell>
@@ -128,8 +128,8 @@ const Documents = () => {
                     component="span"
                     sx={{
                       color: getStatusColor(doc.status),
-                      fontWeight: 'bold',
-                      textTransform: 'capitalize',
+                      fontWeight: "bold",
+                      textTransform: "capitalize",
                     }}
                   >
                     {doc.status}
@@ -145,4 +145,4 @@ const Documents = () => {
   );
 };
 
-export default Documents; 
+export default Documents;

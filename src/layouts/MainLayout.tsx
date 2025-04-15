@@ -44,7 +44,7 @@ const MainLayout = () => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <AppBar position="static" color="primary">
+      <AppBar position="fixed" color="primary">
         <Toolbar sx={{ justifyContent: "space-between" }}>
           {/* Left-side navigation */}
           <Box>
@@ -103,6 +103,7 @@ const MainLayout = () => {
           </Box>
         </Toolbar>
       </AppBar>
+      <Toolbar />
       <Box
         sx={{
           display: "flex",
