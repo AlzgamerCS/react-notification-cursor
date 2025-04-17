@@ -2,19 +2,21 @@ import { useState } from "react";
 import { Box, Button, TextField, Typography, Paper, Link } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import backgroundImage from "../assets/login_background.jpg";
+import { useAuth } from "../context/AuthContext";
 
 const Login = () => {
-  const navigate = useNavigate();
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement actual authentication
-    // For now, just redirect to dashboard
-    navigate("/dashboard");
+
+    // Simulate API call
+    const fakeToken = "your-auth-token"; // Replace with actual API response
+    login(fakeToken); // Save token and log in
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
