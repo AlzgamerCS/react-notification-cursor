@@ -18,8 +18,8 @@ const Notifications = lazy(() => import("./pages/Notifications"));
 
 function App() {
   return (
-    <Router>
-      <AuthProvider>
+    <AuthProvider>
+      <Router>
         <Suspense fallback={<div>Loading...</div>}>
           <Routes>
             {/* Public routes */}
@@ -42,8 +42,8 @@ function App() {
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
-      </AuthProvider>
-    </Router>
+      </Router>
+    </AuthProvider>
   );
 }
 

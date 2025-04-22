@@ -1,23 +1,29 @@
 import { useState } from "react";
-import { Box, Button, TextField, Typography, Paper, Link } from "@mui/material";
+import {
+  Box,
+  Button,
+  TextField,
+  Typography,
+  Paper,
+  Alert,
+  InputAdornment,
+  IconButton,
+  Link,
+} from "@mui/material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import backgroundImage from "../assets/login_background.jpg";
-import { useAuth } from "../context/AuthContext";
 
 const Login = () => {
-  const { login } = useAuth();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // Simulate API call
-    const fakeToken = "your-auth-token"; // Replace with actual API response
-    login(fakeToken); // Save token and log in
-  };
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -25,6 +31,27 @@ const Login = () => {
       ...prev,
       [name]: value,
     }));
+  };
+
+  const handleClickShowPassword = () => {
+    setShowPassword(!showPassword);
+  };
+
+  const handleMouseDownPassword = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+
+    try {
+      await login(formData.email, formData.password);
+      console.log("Routing to the dashboard...");
+      navigate("/dashboard", { replace: true });
+    } catch (err) {
+      setError("Failed to login. Please check your credentials and try again.");
+    }
   };
 
   return (
@@ -71,10 +98,15 @@ const Login = () => {
         >
           Securely manage document expirations and notifications
         </Typography>
+        {error && (
+          <Alert severity="error" sx={{ mb: 2, width: "100%" }}>
+            {error}
+          </Alert>
+        )}
         <Box
           component="form"
           onSubmit={handleSubmit}
-          sx={{ mt: 8, width: "90%" }}
+          sx={{ mt: 1, width: "90%" }}
         >
           <TextField
             margin="normal"
@@ -94,11 +126,25 @@ const Login = () => {
             fullWidth
             name="password"
             label="Password"
-            type="password"
+            type={showPassword ? "text" : "password"}
             id="password"
             autoComplete="current-password"
             value={formData.password}
             onChange={handleChange}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label="toggle password visibility"
+                    onClick={handleClickShowPassword}
+                    onMouseDown={handleMouseDownPassword}
+                    edge="end"
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
           />
           <Button
             type="submit"

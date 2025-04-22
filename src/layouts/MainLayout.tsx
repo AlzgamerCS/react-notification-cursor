@@ -18,6 +18,7 @@ import {
   Notifications,
   Description,
 } from "@mui/icons-material";
+import { useAuth } from "../context/AuthContext";
 
 const theme = createTheme({
   palette: {
@@ -32,6 +33,7 @@ const theme = createTheme({
 
 const MainLayout = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const { user, logout } = useAuth();
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -39,6 +41,11 @@ const MainLayout = () => {
 
   const handleMenuClose = () => {
     setAnchorEl(null);
+  };
+
+  const handleLogout = () => {
+    handleMenuClose();
+    logout();
   };
 
   return (
@@ -89,16 +96,22 @@ const MainLayout = () => {
               Notifications
             </Button>
             <IconButton onClick={handleMenuOpen} sx={{ ml: 2 }}>
-              <Avatar alt="User Profile" src="/path/to/profile-pic.jpg" />
+              <Avatar alt={user?.name || "User"} src="/path/to/profile-pic.jpg">
+                {user?.name?.charAt(0) || "U"}
+              </Avatar>
             </IconButton>
             <Menu
               anchorEl={anchorEl}
               open={Boolean(anchorEl)}
               onClose={handleMenuClose}
             >
-              <MenuItem onClick={handleMenuClose}>Profile</MenuItem>
-              <MenuItem onClick={handleMenuClose}>Settings</MenuItem>
-              <MenuItem onClick={handleMenuClose}>Logout</MenuItem>
+              <MenuItem component={Link} to="/profile" onClick={handleMenuClose}>
+                Profile
+              </MenuItem>
+              <MenuItem component={Link} to="/settings" onClick={handleMenuClose}>
+                Settings
+              </MenuItem>
+              <MenuItem onClick={handleLogout}>Logout</MenuItem>
             </Menu>
           </Box>
         </Toolbar>
