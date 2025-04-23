@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Box,
   Button,
@@ -7,21 +7,35 @@ import {
   Typography,
   Paper,
   Link,
+  Alert,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { login, clearError } from '../store/slices/authSlice';
+import type { AppDispatch, RootState } from '../store';
 
 const Login = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
+  const { isLoading, error, isAuthenticated } = useSelector((state: RootState) => state.auth);
+
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard');
+    }
+    return () => {
+      dispatch(clearError());
+    };
+  }, [isAuthenticated, navigate, dispatch]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement actual authentication
-    // For now, just redirect to dashboard
-    navigate('/dashboard');
+    await dispatch(login(formData));
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -49,6 +63,11 @@ const Login = () => {
           <Typography component="h2" variant="h6" align="center" gutterBottom>
             Sign In
           </Typography>
+          {error && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
+            </Alert>
+          )}
           <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
             <TextField
               margin="normal"
@@ -61,6 +80,7 @@ const Login = () => {
               autoFocus
               value={formData.email}
               onChange={handleChange}
+              disabled={isLoading}
             />
             <TextField
               margin="normal"
@@ -73,14 +93,16 @@ const Login = () => {
               autoComplete="current-password"
               value={formData.password}
               onChange={handleChange}
+              disabled={isLoading}
             />
             <Button
               type="submit"
               fullWidth
               variant="contained"
               sx={{ mt: 3, mb: 2 }}
+              disabled={isLoading}
             >
-              Sign In
+              {isLoading ? 'Signing in...' : 'Sign In'}
             </Button>
             <Box sx={{ textAlign: 'center' }}>
               <Link href="#" variant="body2">

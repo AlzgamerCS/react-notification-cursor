@@ -1,5 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
+import { Provider } from 'react-redux';
+import { store } from './store';
 import MainLayout from './layouts/MainLayout';
 
 // Lazy load pages
@@ -8,26 +10,43 @@ const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Documents = lazy(() => import('./pages/Documents'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
+// Protected Route component
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+  return <>{children}</>;
+};
+
 function App() {
   return (
-    <Router>
-      <Suspense fallback={<div>Loading...</div>}>
-        <Routes>
-          {/* Public routes */}
-          <Route path="/login" element={<Login />} />
+    <Provider store={store}>
+      <Router>
+        <Suspense fallback={<div>Loading...</div>}>
+          <Routes>
+            {/* Public routes */}
+            <Route path="/login" element={<Login />} />
 
-          {/* Protected routes */}
-          <Route element={<MainLayout />}>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/documents" element={<Documents />} />
-          </Route>
+            {/* Protected routes */}
+            <Route
+              element={
+                <ProtectedRoute>
+                  <MainLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/documents" element={<Documents />} />
+            </Route>
 
-          {/* Catch all */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </Suspense>
-    </Router>
+            {/* Catch all */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
+      </Router>
+    </Provider>
   );
 }
 
