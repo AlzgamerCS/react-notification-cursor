@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from 'react';
 import {
   Box,
   Button,
@@ -9,25 +9,37 @@ import {
   InputAdornment,
   IconButton,
   Link,
-} from "@mui/material";
-import { Visibility, VisibilityOff } from "@mui/icons-material";
-import { useAuth } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
-import backgroundImage from "../assets/login_background.jpg";
+} from '@mui/material';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { login, clearError } from '../store/slices/authSlice';
+import type { AppDispatch, RootState } from '../store';
+import backgroundImage from '../assets/login_background.jpg';
 
 const Login = () => {
+  const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
+  const { isLoading, error, isAuthenticated } = useSelector((state: RootState) => state.auth);
+
   const [formData, setFormData] = useState({
-    email: "",
-    password: "",
+    email: '',
+    password: '',
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
-  const { login } = useAuth();
-  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard');
+    }
+    return () => {
+      dispatch(clearError());
+    };
+  }, [isAuthenticated, navigate, dispatch]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
       [name]: value,
     }));
@@ -43,48 +55,39 @@ const Login = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
-
-    try {
-      await login(formData.email, formData.password);
-      console.log("Routing to the dashboard...");
-      navigate("/dashboard", { replace: true });
-    } catch (err) {
-      setError("Failed to login. Please check your credentials and try again.");
-    }
+    await dispatch(login(formData));
   };
 
   return (
     <Box
       sx={{
-        minHeight: "100vh",
-        width: "100vw",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        background: "#f5f5f5",
+        minHeight: '100vh',
+        width: '100vw',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        background: '#f5f5f5',
         backgroundImage: `url(${backgroundImage})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
       }}
     >
       <Paper
         elevation={6}
         sx={{
           p: 4,
-          width: "450px",
-          height: "auto",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          borderRadius: "10px",
-          boxShadow:
-            "0 10px 40px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.2)",
-          position: "relative",
+          width: '450px',
+          height: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          borderRadius: '10px',
+          boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.2)',
+          position: 'relative',
           zIndex: 2,
-          backgroundColor: "rgba(255, 255, 255, 0.95)",
-          backdropFilter: "blur(10px)",
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(10px)',
         }}
       >
         <Typography component="h1" variant="h5" align="center" gutterBottom>
@@ -99,14 +102,14 @@ const Login = () => {
           Securely manage document expirations and notifications
         </Typography>
         {error && (
-          <Alert severity="error" sx={{ mb: 2, width: "100%" }}>
+          <Alert severity="error" sx={{ mb: 2, width: '100%' }}>
             {error}
           </Alert>
         )}
         <Box
           component="form"
           onSubmit={handleSubmit}
-          sx={{ mt: 1, width: "90%" }}
+          sx={{ mt: 1, width: '90%' }}
         >
           <TextField
             margin="normal"
@@ -119,6 +122,7 @@ const Login = () => {
             autoFocus
             value={formData.email}
             onChange={handleChange}
+            disabled={isLoading}
           />
           <TextField
             margin="normal"
@@ -126,11 +130,12 @@ const Login = () => {
             fullWidth
             name="password"
             label="Password"
-            type={showPassword ? "text" : "password"}
+            type={showPassword ? 'text' : 'password'}
             id="password"
             autoComplete="current-password"
             value={formData.password}
             onChange={handleChange}
+            disabled={isLoading}
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
@@ -151,16 +156,17 @@ const Login = () => {
             fullWidth
             variant="contained"
             sx={{ mt: 3, mb: 2 }}
+            disabled={isLoading}
           >
-            Log In
+            {isLoading ? 'Signing in...' : 'Log In'}
           </Button>
-          <Box sx={{ textAlign: "center" }}>
+          <Box sx={{ textAlign: 'center' }}>
             <Link
               href="/forgot-password"
               variant="body2"
               onClick={(e) => {
                 e.preventDefault();
-                navigate("/forgot-password");
+                navigate('/forgot-password');
               }}
             >
               Can't log in?
@@ -172,4 +178,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default Login; 

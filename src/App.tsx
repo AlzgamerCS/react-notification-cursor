@@ -5,9 +5,10 @@ import {
   Navigate,
 } from "react-router-dom";
 import { lazy, Suspense } from "react";
+import { Provider } from 'react-redux';
+import { store } from './store';
 import MainLayout from "./layouts/MainLayout";
-import { AuthProvider } from "./context/AuthContext";
-import ProtectedRoute from "./routes/ProtectedRoute";
+
 // Lazy load pages
 const Login = lazy(() => import("./pages/Login"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
@@ -16,9 +17,18 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const Notifications = lazy(() => import("./pages/Notifications"));
 
+// Protected Route component
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+  return <>{children}</>;
+};
+
 function App() {
   return (
-    <AuthProvider>
+    <Provider store={store}>
       <Router>
         <Suspense fallback={<div>Loading...</div>}>
           <Routes>
@@ -27,23 +37,25 @@ function App() {
             <Route path="/forgot-password" element={<ForgotPassword />} />
 
             {/* Protected routes */}
-            <Route element={<ProtectedRoute />}>
-              <Route element={<MainLayout />}>
-                <Route
-                  path="/"
-                  element={<Navigate to="/dashboard" replace />}
-                />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/documents" element={<Documents />} />
-                <Route path="/notifications" element={<Notifications />} />
-              </Route>
+            <Route
+              element={
+                <ProtectedRoute>
+                  <MainLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/documents" element={<Documents />} />
+              <Route path="/notifications" element={<Notifications />} />
             </Route>
+
             {/* Catch all */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
       </Router>
-    </AuthProvider>
+    </Provider>
   );
 }
 
