@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Box,
   Paper,
@@ -15,47 +15,63 @@ import {
   Tooltip,
 } from "@mui/material";
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from "@mui/icons-material";
-import { documentService } from "../services/api";
-import { useAuth } from "../context/AuthContext";
+import { useSelector } from "react-redux";
+import type { RootState } from "../store";
 import { format } from "date-fns";
-import { Document } from "../services/api";
+
+// Mock data
+const initialDocuments = [
+  {
+    id: "1",
+    title: "Business License",
+    description: "Company business operation license",
+    category: "Legal",
+    tags: ["important", "legal", "business"],
+    expirationDate: "2024-12-31",
+    status: "ACTIVE",
+  },
+  {
+    id: "2",
+    title: "Insurance Policy",
+    description: "Company liability insurance",
+    category: "Insurance",
+    tags: ["insurance", "liability"],
+    expirationDate: "2024-06-15",
+    status: "WARNING",
+  },
+  {
+    id: "3",
+    title: "Health Certificate",
+    description: "Employee health certification",
+    category: "Health",
+    tags: ["health", "certification"],
+    expirationDate: "2024-03-01",
+    status: "EXPIRED",
+  },
+];
 
 const Documents = () => {
-  const [documents, setDocuments] = useState<Document[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
+  const [documents, setDocuments] = useState(initialDocuments);
+  const { user } = useSelector((state: RootState) => state.auth);
 
-  useEffect(() => {
-    const fetchDocuments = async () => {
-      if (!user?.id) return;
-      
-      try {
-        const data = await documentService.getDocumentsByOwner(user.id);
-        setDocuments(data);
-      } catch (error) {
-        console.error("Error fetching documents:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchDocuments();
-  }, [user?.id]);
-
-  const handleDelete = async (id: string) => {
+  const handleDelete = (id: string) => {
     if (window.confirm("Are you sure you want to delete this document?")) {
-      try {
-        await documentService.deleteDocument(id);
-        setDocuments(documents.filter(doc => doc.id !== id));
-      } catch (error) {
-        console.error("Error deleting document:", error);
-      }
+      setDocuments(documents.filter(doc => doc.id !== id));
     }
   };
 
-  if (loading) {
-    return <Typography>Loading...</Typography>;
-  }
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "ACTIVE":
+        return "success";
+      case "WARNING":
+        return "warning";
+      case "EXPIRED":
+        return "error";
+      default:
+        return "default";
+    }
+  };
 
   return (
     <Box>
@@ -93,7 +109,7 @@ const Documents = () => {
                 <TableCell>{document.category}</TableCell>
                 <TableCell>
                   <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                    {document.tags.map((tag: string) => (
+                    {document.tags.map((tag) => (
                       <Chip
                         key={tag}
                         label={tag}
@@ -109,13 +125,7 @@ const Documents = () => {
                 <TableCell>
                   <Chip
                     label={document.status}
-                    color={
-                      document.status === "ACTIVE"
-                        ? "success"
-                        : document.status === "EXPIRED"
-                        ? "error"
-                        : "default"
-                    }
+                    color={getStatusColor(document.status)}
                   />
                 </TableCell>
                 <TableCell>
