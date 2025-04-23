@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import {
   Box,
   Paper,
@@ -9,133 +10,132 @@ import {
   TableRow,
   Typography,
   Button,
-  TextField,
-  InputAdornment,
-} from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
-import AddIcon from '@mui/icons-material/Add';
-import { useState } from 'react';
-
-// Mock data
-const mockDocuments = [
-  {
-    id: 1,
-    name: 'Business License',
-    type: 'License',
-    department: 'Operations',
-    expiryDate: '2024-06-15',
-    status: 'urgent',
-    assignedTo: 'John Doe',
-  },
-  {
-    id: 2,
-    name: 'Insurance Policy',
-    type: 'Insurance',
-    department: 'Legal',
-    expiryDate: '2024-08-20',
-    status: 'soon',
-    assignedTo: 'Jane Smith',
-  },
-  {
-    id: 3,
-    name: 'Health Certificate',
-    type: 'Certificate',
-    department: 'HR',
-    expiryDate: '2024-12-31',
-    status: 'good',
-    assignedTo: 'Mike Johnson',
-  },
-];
+  Chip,
+  IconButton,
+  Tooltip,
+} from "@mui/material";
+import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from "@mui/icons-material";
+import { documentService } from "../services/api";
+import { useAuth } from "../context/AuthContext";
+import { format } from "date-fns";
+import { Document } from "../services/api";
 
 const Documents = () => {
-  const [documents] = useState(mockDocuments);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'urgent':
-        return '#ff1744';
-      case 'soon':
-        return '#ffab00';
-      case 'good':
-        return '#00c853';
-      default:
-        return '#757575';
+  useEffect(() => {
+    const fetchDocuments = async () => {
+      if (!user?.id) return;
+      
+      try {
+        const data = await documentService.getDocumentsByOwner(user.id);
+        setDocuments(data);
+      } catch (error) {
+        console.error("Error fetching documents:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDocuments();
+  }, [user?.id]);
+
+  const handleDelete = async (id: string) => {
+    if (window.confirm("Are you sure you want to delete this document?")) {
+      try {
+        await documentService.deleteDocument(id);
+        setDocuments(documents.filter(doc => doc.id !== id));
+      } catch (error) {
+        console.error("Error deleting document:", error);
+      }
     }
   };
 
-  const filteredDocuments = documents.filter(doc =>
-    Object.values(doc).some(
-      value =>
-        typeof value === 'string' &&
-        value.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  );
+  if (loading) {
+    return <Typography>Loading...</Typography>;
+  }
 
   return (
-    <Box sx={{ flexGrow: 1 }}>
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          mb: 3,
-        }}
-      >
-        <Typography variant="h4">Documents</Typography>
-        <Button variant="contained" startIcon={<AddIcon />}>
+    <Box>
+      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3 }}>
+        <Typography variant="h4" component="h1">
+          My Documents
+        </Typography>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => {/* TODO: Implement document creation */}}
+        >
           Add Document
         </Button>
       </Box>
-
-      <TextField
-        fullWidth
-        variant="outlined"
-        placeholder="Search documents..."
-        value={searchTerm}
-        onChange={e => setSearchTerm(e.target.value)}
-        sx={{ mb: 3 }}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <SearchIcon />
-            </InputAdornment>
-          ),
-        }}
-      />
 
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>Document Name</TableCell>
-              <TableCell>Type</TableCell>
-              <TableCell>Department</TableCell>
-              <TableCell>Expiry Date</TableCell>
+              <TableCell>Title</TableCell>
+              <TableCell>Description</TableCell>
+              <TableCell>Category</TableCell>
+              <TableCell>Tags</TableCell>
+              <TableCell>Expiration Date</TableCell>
               <TableCell>Status</TableCell>
-              <TableCell>Assigned To</TableCell>
+              <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredDocuments.map(doc => (
-              <TableRow key={doc.id} hover>
-                <TableCell>{doc.name}</TableCell>
-                <TableCell>{doc.type}</TableCell>
-                <TableCell>{doc.department}</TableCell>
-                <TableCell>{doc.expiryDate}</TableCell>
+            {documents.map((document) => (
+              <TableRow key={document.id}>
+                <TableCell>{document.title}</TableCell>
+                <TableCell>{document.description}</TableCell>
+                <TableCell>{document.category}</TableCell>
                 <TableCell>
-                  <Typography
-                    component="span"
-                    sx={{
-                      color: getStatusColor(doc.status),
-                      fontWeight: 'bold',
-                      textTransform: 'capitalize',
-                    }}
-                  >
-                    {doc.status}
-                  </Typography>
+                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                    {document.tags.map((tag: string) => (
+                      <Chip
+                        key={tag}
+                        label={tag}
+                        size="small"
+                        sx={{ backgroundColor: '#f0f0f0' }}
+                      />
+                    ))}
+                  </Box>
                 </TableCell>
-                <TableCell>{doc.assignedTo}</TableCell>
+                <TableCell>
+                  {format(new Date(document.expirationDate), "MMM d, yyyy")}
+                </TableCell>
+                <TableCell>
+                  <Chip
+                    label={document.status}
+                    color={
+                      document.status === "ACTIVE"
+                        ? "success"
+                        : document.status === "EXPIRED"
+                        ? "error"
+                        : "default"
+                    }
+                  />
+                </TableCell>
+                <TableCell>
+                  <Tooltip title="Edit">
+                    <IconButton
+                      size="small"
+                      onClick={() => {/* TODO: Implement document editing */}}
+                    >
+                      <EditIcon />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Delete">
+                    <IconButton
+                      size="small"
+                      onClick={() => handleDelete(document.id)}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </Tooltip>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -145,4 +145,4 @@ const Documents = () => {
   );
 };
 
-export default Documents; 
+export default Documents;
