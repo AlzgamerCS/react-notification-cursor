@@ -1,91 +1,146 @@
-import { Box, Typography, Paper } from "@mui/material";
-import { Description as DocumentIcon } from "@mui/icons-material";
+import { useState } from 'react';
+import {
+  Box,
+  Typography,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemIcon,
+  IconButton,
+  Paper,
+  Chip,
+  Divider,
+} from '@mui/material';
+import {
+  Notifications as NotificationsIcon,
+  Delete as DeleteIcon,
+  Warning as WarningIcon,
+  Info as InfoIcon,
+} from '@mui/icons-material';
 
-interface Notification {
-  id: number;
-  date: string;
-  title: string;
-  department: string;
-}
-
-let NotificationsList: Notification[] = [
+// Mock data
+const initialNotifications = [
   {
     id: 1,
-    date: "Friday, 28 March 2025",
-    title:
-      "Dormitory Agreement of an International Student Martin Walter Johnson",
-    department: "Department of Housing and Student Services",
+    title: 'Document Expiring Soon',
+    message: 'Business License will expire in 15 days',
+    type: 'warning',
+    timestamp: '2024-03-20T10:00:00',
   },
   {
     id: 2,
-    date: "Sunday, 30 March 2025",
-    title: "Microsoft Office Subscription",
-    department: "Department of Computer Science and Data Science",
+    title: 'New Document Added',
+    message: 'Insurance Policy has been added to your documents',
+    type: 'info',
+    timestamp: '2024-03-19T15:30:00',
   },
   {
     id: 3,
-    date: "Wednesday, 2 April 2025",
-    title:
-      "Dormitory Agreement of an International Student Martin Walter Johnson",
-    department: "Department of Housing and Student Services",
-  },
-  {
-    id: 4,
-    date: "Friday, 4 April 2025",
-    title:
-      "Dormitory Agreement of an International Student Martin Walter Johnson",
-    department: "Department of Housing and Student Services",
+    title: 'Urgent: Document Expired',
+    message: 'Health Certificate has expired',
+    type: 'error',
+    timestamp: '2024-03-18T09:15:00',
   },
 ];
 
-NotificationsList = NotificationsList.concat(NotificationsList);
-
 const Notifications = () => {
+  const [notifications, setNotifications] = useState(initialNotifications);
+
+  const handleDelete = (id: number) => {
+    setNotifications(notifications.filter(notification => notification.id !== id));
+  };
+
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case 'warning':
+        return <WarningIcon color="warning" />;
+      case 'error':
+        return <WarningIcon color="error" />;
+      default:
+        return <InfoIcon color="info" />;
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
   return (
-    <Box sx={{ maxWidth: "1000px", margin: "0 auto", pt: 60 }}>
-      <Typography variant="h5" component="h1" gutterBottom sx={{ mb: 4 }}>
-        Your Notifications
+    <Box sx={{ maxWidth: 800, mx: 'auto', mt: 2 }}>
+      <Typography variant="h4" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <NotificationsIcon /> Notifications
       </Typography>
 
-      {NotificationsList.map((notification) => (
-        <Paper
-          key={notification.id}
-          sx={{
-            mb: 2,
-            p: 2,
-            "&:hover": {
-              boxShadow: 3,
-              cursor: "pointer",
-              bgcolor: "rgba(251, 148, 85, 0.04)",
-            },
-            transition: "all 0.2s ease-in-out",
-          }}
-        >
-          <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2 }}>
-            <DocumentIcon
-              sx={{
-                color: "text.secondary",
-                bgcolor: "background.paper",
-                p: 0.5,
-                borderRadius: 1,
-                border: "1px solid",
-                borderColor: "divider",
-              }}
-            />
-            <Box sx={{ flexGrow: 1 }}>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                {notification.date}
-              </Typography>
-              <Typography variant="subtitle1" component="h2" gutterBottom>
-                {notification.title}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {notification.department}
-              </Typography>
-            </Box>
-          </Box>
-        </Paper>
-      ))}
+      <Paper elevation={2}>
+        <List>
+          {notifications.length === 0 ? (
+            <ListItem>
+              <ListItemText
+                primary="No notifications"
+                secondary="You're all caught up!"
+              />
+            </ListItem>
+          ) : (
+            notifications.map((notification, index) => (
+              <Box key={notification.id}>
+                {index > 0 && <Divider />}
+                <ListItem
+                  secondaryAction={
+                    <IconButton
+                      edge="end"
+                      aria-label="delete"
+                      onClick={() => handleDelete(notification.id)}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  }
+                >
+                  <ListItemIcon>
+                    {getNotificationIcon(notification.type)}
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        {notification.title}
+                        <Chip
+                          label={notification.type}
+                          size="small"
+                          color={
+                            notification.type === 'error'
+                              ? 'error'
+                              : notification.type === 'warning'
+                              ? 'warning'
+                              : 'info'
+                          }
+                        />
+                      </Box>
+                    }
+                    secondary={
+                      <>
+                        {notification.message}
+                        <Typography
+                          component="span"
+                          variant="body2"
+                          color="text.secondary"
+                          sx={{ display: 'block' }}
+                        >
+                          {formatDate(notification.timestamp)}
+                        </Typography>
+                      </>
+                    }
+                  />
+                </ListItem>
+              </Box>
+            ))
+          )}
+        </List>
+      </Paper>
     </Box>
   );
 };

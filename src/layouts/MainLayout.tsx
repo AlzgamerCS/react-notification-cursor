@@ -11,14 +11,16 @@ import {
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { CssBaseline } from "@mui/material";
 import { useState } from "react";
-import { Link, Outlet } from "react-router-dom";
+import { Link, Outlet, useNavigate } from "react-router-dom";
 import {
   Home,
   Dashboard as DashboardIcon,
   Notifications,
   Description,
 } from "@mui/icons-material";
-import { useAuth } from "../context/AuthContext";
+import { useDispatch, useSelector } from "react-redux";
+import { logout } from "../store/slices/authSlice";
+import type { AppDispatch, RootState } from "../store";
 
 const theme = createTheme({
   palette: {
@@ -33,7 +35,9 @@ const theme = createTheme({
 
 const MainLayout = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
+  const { user } = useSelector((state: RootState) => state.auth);
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -43,9 +47,10 @@ const MainLayout = () => {
     setAnchorEl(null);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     handleMenuClose();
-    logout();
+    await dispatch(logout());
+    navigate('/login');
   };
 
   return (
