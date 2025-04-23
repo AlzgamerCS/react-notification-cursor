@@ -1,9 +1,10 @@
 import axios from 'axios';
 
-const BASE_URL = 'http://localhost:8080/api/v1';
+// Use relative path since we're using Vite proxy
+const API_URL = '/api/v1';
 
-export const api = axios.create({
-  baseURL: BASE_URL,
+const api = axios.create({
+  baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -36,5 +37,22 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  lastLoginAt: string;
+}
+
+export interface AuthResponse {
+  token: string;
+  user: User;
+  name: string;
+  email: string;
+  role: string;
+  lastLoginAt: string;
+}
 
 export default api; 
