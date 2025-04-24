@@ -183,6 +183,9 @@ const AddDocument = () => {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               margin="normal"
+              inputProps={{ maxLength: 255 }}
+              helperText={`${title.length}/255 characters`}
+              error={title.length === 255}
             />
 
             <TextField
@@ -193,6 +196,9 @@ const AddDocument = () => {
               margin="normal"
               multiline
               rows={3}
+              inputProps={{ maxLength: 255 }}
+              helperText={`${description.length}/255 characters`}
+              error={description.length === 255}
             />
 
             <FormControl fullWidth margin="normal">
@@ -216,15 +222,37 @@ const AddDocument = () => {
                 label="Add Tags"
                 value={tagInput}
                 onChange={(e) => setTagInput(e.target.value)}
-                onKeyDown={handleTagInputKeyDown}
-                helperText="Press Enter to add a tag"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && tagInput) {
+                    e.preventDefault();
+                    if (tags.length >= 10) {
+                      setError('Maximum 10 tags allowed');
+                      return;
+                    }
+                    if (tagInput.length > 50) {
+                      setError('Tag length cannot exceed 50 characters');
+                      return;
+                    }
+                    if (!tags.includes(tagInput)) {
+                      setTags([...tags, tagInput]);
+                      setTagInput('');
+                      setError('');
+                    }
+                  }
+                }}
+                helperText={`Enter to add tag. Maximum 10 tags, 50 characters each. ${tags.length}/10 tags used.`}
+                error={tags.length >= 10 || tagInput.length > 50}
+                inputProps={{ maxLength: 50 }}
               />
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
                 {tags.map((tag) => (
                   <Chip
                     key={tag}
                     label={tag}
-                    onDelete={() => setTags(tags.filter((t) => t !== tag))}
+                    onDelete={() => {
+                      setTags(tags.filter((t) => t !== tag));
+                      setError('');
+                    }}
                   />
                 ))}
               </Box>
@@ -236,6 +264,7 @@ const AddDocument = () => {
                 value={expirationDate}
                 onChange={(newValue) => setExpirationDate(newValue)}
                 sx={{ mt: 2, mb: 2, width: '100%' }}
+                minDate={new Date()} // Prevent past dates
               />
             </LocalizationProvider>
 
