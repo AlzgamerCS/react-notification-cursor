@@ -16,6 +16,7 @@ import {
 } from "@mui/material";
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from "@mui/icons-material";
 import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import type { RootState } from "../store";
 import { format } from "date-fns";
 
@@ -53,6 +54,7 @@ const initialDocuments = [
 const Documents = () => {
   const [documents, setDocuments] = useState(initialDocuments);
   const { user } = useSelector((state: RootState) => state.auth);
+  const navigate = useNavigate();
 
   const handleDelete = (id: string) => {
     if (window.confirm("Are you sure you want to delete this document?")) {
@@ -82,7 +84,7 @@ const Documents = () => {
         <Button
           variant="contained"
           startIcon={<AddIcon />}
-          onClick={() => {/* TODO: Implement document creation */}}
+          onClick={() => navigate('/add-document')}
         >
           Add Document
         </Button>
