@@ -1,16 +1,30 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
+import { store } from '../store';
+import { logout } from '../store/slices/authSlice';
 
-// Use relative path since we're using Vite proxy
-const API_URL = '/api/v1';
+// Types
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  lastLoginAt: string;
+}
 
+export interface AuthResponse {
+  token: string;
+  user: User;
+}
+
+// API Configuration
 const api = axios.create({
-  baseURL: API_URL,
+  baseURL: '/api/v1', // Using Vite's proxy configuration
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Request interceptor to add auth token
+// Request interceptor
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -24,35 +38,52 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor to handle errors
+// Response interceptor
 api.interceptors.response.use(
   (response) => response,
-  async (error) => {
+  async (error: AxiosError) => {
     if (error.response?.status === 401) {
-      // Clear auth state and redirect to login
+      // Dispatch logout action to clear Redux state
+      store.dispatch(logout());
+      // Clear local storage
       localStorage.removeItem('token');
       localStorage.removeItem('user');
+      // Redirect to login
       window.location.href = '/login';
     }
     return Promise.reject(error);
   }
 );
 
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  lastLoginAt: string;
-}
+// API Endpoints
+export const ENDPOINTS = {
+  AUTH: {
+    LOGIN: '/auth/login',
+    LOGOUT: '/auth/logout',
+  },
+  DOCUMENTS: {
+    LIST: '/documents/my',
+    CREATE: '/documents',
+    DELETE: (id: string) => `/documents/${id}`,
+    DOWNLOAD: (filePath: string) => `/files/download/${filePath}`,
+    UPLOAD: '/files/upload',
+  },
+  NOTIFICATIONS: {
+    LIST: '/notifications/my',
+    CREATE: '/notifications',
+    DELETE: (id: string) => `/notifications/${id}`,
+  },
+  USER: {
+    PROFILE: '/users/profile',
+  },
+};
 
-export interface AuthResponse {
-  token: string;
-  user: User;
-  name: string;
-  email: string;
-  role: string;
-  lastLoginAt: string;
-}
+// Helper function to handle API errors
+export const handleApiError = (error: any): string => {
+  if (axios.isAxiosError(error)) {
+    return error.response?.data?.message || error.message;
+  }
+  return 'An unexpected error occurred';
+};
 
 export default api; 

@@ -21,9 +21,11 @@ import {
   Edit as EditIcon, 
   Delete as DeleteIcon,
   Download as DownloadIcon,
+  Notifications as NotificationsIcon,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
+import api, { ENDPOINTS, handleApiError } from '../services/api';
 
 interface Document {
   id: string;
@@ -51,20 +53,12 @@ const Documents = () => {
 
   const fetchDocuments = async () => {
     try {
-      const response = await fetch('http://localhost:8080/api/v1/documents/my', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch documents');
-      }
-
-      const data = await response.json();
-      setDocuments(data);
+      const response = await api.get<Document[]>(ENDPOINTS.DOCUMENTS.LIST);
+      setDocuments(response.data);
+      setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred while fetching documents');
+      const errorMessage = handleApiError(err);
+      setError(errorMessage);
       console.error('Error fetching documents:', err);
     } finally {
       setLoading(false);
@@ -74,20 +68,11 @@ const Documents = () => {
   const handleDelete = async (id: string) => {
     if (window.confirm("Are you sure you want to delete this document?")) {
       try {
-        const response = await fetch(`http://localhost:8080/api/v1/documents/${id}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to delete document');
-        }
-
+        await api.delete(ENDPOINTS.DOCUMENTS.DELETE(id));
         setDocuments(documents.filter(doc => doc.id !== id));
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to delete document');
+        const errorMessage = handleApiError(err);
+        setError(errorMessage);
         console.error('Delete error:', err);
       }
     }
@@ -95,21 +80,12 @@ const Documents = () => {
 
   const handleDownload = async (filePath: string, title: string) => {
     try {
-      const response = await fetch(`http://localhost:8080/api/files/download/${filePath}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
+      const response = await api.get(ENDPOINTS.DOCUMENTS.DOWNLOAD(filePath), {
+        responseType: 'blob'
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to download file');
-      }
-
-      // Get the blob from the response
-      const blob = await response.blob();
-      
       // Create a URL for the blob
-      const url = window.URL.createObjectURL(blob);
+      const url = window.URL.createObjectURL(response.data);
       
       // Extract extension from filePath
       const extension = filePath.split('.').pop() || '';
@@ -117,7 +93,6 @@ const Documents = () => {
       // Create a temporary link element
       const link = document.createElement('a');
       link.href = url;
-      // Add the extension to the title
       link.download = `${title}.${extension}`;
       
       // Append to body, click, and remove
@@ -128,7 +103,8 @@ const Documents = () => {
       // Clean up the URL
       window.URL.revokeObjectURL(url);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to download file');
+      const errorMessage = handleApiError(err);
+      setError(errorMessage);
       console.error('Download error:', err);
     }
   };
@@ -233,6 +209,14 @@ const Documents = () => {
                         onClick={() => {/* TODO: Implement document editing */}}
                       >
                         <EditIcon />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Add Reminder">
+                      <IconButton
+                        size="small"
+                        onClick={() => navigate(`/add-reminder/${document.id}`)}
+                      >
+                        <NotificationsIcon />
                       </IconButton>
                     </Tooltip>
                     <Tooltip title="Delete">

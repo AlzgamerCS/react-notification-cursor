@@ -14,6 +14,7 @@ const Login = lazy(() => import("./pages/Login"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Documents = lazy(() => import("./pages/Documents"));
 const AddDocument = lazy(() => import("./pages/AddDocument"));
+const AddReminder = lazy(() => import("./pages/AddReminder"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const Notifications = lazy(() => import("./pages/Notifications"));
@@ -51,6 +52,7 @@ function App() {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/documents" element={<Documents />} />
               <Route path="/add-document" element={<AddDocument />} />
+              <Route path="/add-reminder/:documentId" element={<AddReminder />} />
               <Route path="/notifications" element={<Notifications />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/settings" element={<Settings />} />

@@ -17,6 +17,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { useNavigate } from 'react-router-dom';
+import api, { ENDPOINTS, handleApiError } from '../services/api';
 
 // Document category enum matching backend
 const DocumentCategory = {
@@ -62,37 +63,29 @@ const AddDocument = () => {
 
     setSelectedFile(file);
     setError('');
-    setUploadedFilePath(''); // Clear previous upload path
+    setUploadedFilePath('');
 
     const formData = new FormData();
     formData.append('files', file);
 
     try {
       setUploading(true);
-      const response = await fetch('http://localhost:8080/api/files/upload', {
-        method: 'POST',
-        body: formData,
+      const response = await api.post(ENDPOINTS.DOCUMENTS.UPLOAD, formData, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'multipart/form-data',
         },
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'File upload failed');
-      }
-
-      const data = await response.json();
-      if (!Array.isArray(data) || data.length === 0) {
+      if (!Array.isArray(response.data) || response.data.length === 0) {
         throw new Error('Invalid response from server');
       }
 
-      // Use the fileName from the first uploaded file
-      setUploadedFilePath(data[0].fileName);
+      setUploadedFilePath(response.data[0].fileName);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to upload file. Please try again.');
+      const errorMessage = handleApiError(err);
+      setError(errorMessage);
       console.error('File upload error:', err);
-      setSelectedFile(null); // Clear selected file on error
+      setSelectedFile(null);
     } finally {
       setUploading(false);
     }
@@ -130,25 +123,14 @@ const AddDocument = () => {
 
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:8080/api/v1/documents', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify(documentData),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to create document');
-      }
-
+      await api.post(ENDPOINTS.DOCUMENTS.CREATE, documentData);
       setSuccess(true);
       setTimeout(() => {
         navigate('/documents');
       }, 2000);
     } catch (err) {
-      setError('Failed to create document. Please try again.');
+      const errorMessage = handleApiError(err);
+      setError(errorMessage);
       console.error('Document creation error:', err);
     } finally {
       setLoading(false);

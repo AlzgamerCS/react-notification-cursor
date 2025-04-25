@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import api from '../api/axios';
 import {
   Box,
   Typography,
@@ -16,45 +17,63 @@ import {
   Delete as DeleteIcon,
   Warning as WarningIcon,
   Info as InfoIcon,
+  Email as EmailIcon,
 } from '@mui/icons-material';
 
-// Mock data
-const initialNotifications = [
-  {
-    id: 1,
-    title: 'Document Expiring Soon',
-    message: 'Business License will expire in 15 days',
-    type: 'warning',
-    timestamp: '2024-03-20T10:00:00',
-  },
-  {
-    id: 2,
-    title: 'New Document Added',
-    message: 'Insurance Policy has been added to your documents',
-    type: 'info',
-    timestamp: '2024-03-19T15:30:00',
-  },
-  {
-    id: 3,
-    title: 'Urgent: Document Expired',
-    message: 'Health Certificate has expired',
-    type: 'error',
-    timestamp: '2024-03-18T09:15:00',
-  },
-];
+interface Notification {
+  id: string;
+  userId: string;
+  documentId: string;
+  documentTitle: string;
+  documentStatus: string;
+  channel: string;
+  type: string;
+  scheduledAt: string;
+  sentAt: string | null;
+  status: string;
+}
 
 const Notifications = () => {
-  const [notifications, setNotifications] = useState(initialNotifications);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleDelete = (id: number) => {
-    setNotifications(notifications.filter(notification => notification.id !== id));
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const response = await api.get('/notifications/my');
+        setNotifications(response.data);
+        setError(null);
+      } catch (err: any) {
+        if (err.response?.status === 401) {
+          setError('Please login to view notifications');
+        } else {
+          setError('Failed to fetch notifications');
+        }
+        console.error('Error fetching notifications:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNotifications();
+  }, []);
+
+  const handleDelete = async (id: string) => {
+    try {
+      await api.delete(`/notifications/${id}`);
+      setNotifications(notifications.filter(notification => notification.id !== id));
+    } catch (err) {
+      console.error('Error deleting notification:', err);
+      // Optionally show an error message to the user
+    }
   };
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
-      case 'warning':
+      case 'REMINDER':
         return <WarningIcon color="warning" />;
-      case 'error':
+      case 'ERROR':
         return <WarningIcon color="error" />;
       default:
         return <InfoIcon color="info" />;
@@ -66,10 +85,27 @@ const Notifications = () => {
     return date.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
+      year: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
     });
   };
+
+  if (loading) {
+    return (
+      <Box sx={{ maxWidth: 800, mx: 'auto', mt: 2 }}>
+        <Typography>Loading notifications...</Typography>
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ maxWidth: 800, mx: 'auto', mt: 2 }}>
+        <Typography color="error">{error}</Typography>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ maxWidth: 800, mx: 'auto', mt: 2 }}>
@@ -107,30 +143,48 @@ const Notifications = () => {
                   <ListItemText
                     primary={
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        {notification.title}
+                        {notification.documentTitle}
                         <Chip
                           label={notification.type}
                           size="small"
                           color={
-                            notification.type === 'error'
+                            notification.type === 'ERROR'
                               ? 'error'
-                              : notification.type === 'warning'
+                              : notification.type === 'REMINDER'
                               ? 'warning'
                               : 'info'
                           }
+                        />
+                        <Chip
+                          icon={<EmailIcon />}
+                          label={notification.channel}
+                          size="small"
+                          color="default"
+                        />
+                        <Chip
+                          label={notification.status}
+                          size="small"
+                          color={notification.status === 'PENDING' ? 'warning' : 'success'}
                         />
                       </Box>
                     }
                     secondary={
                       <>
-                        {notification.message}
+                        <Typography
+                          component="span"
+                          variant="body2"
+                          color="text.secondary"
+                        >
+                          Document Status: {notification.documentStatus}
+                        </Typography>
                         <Typography
                           component="span"
                           variant="body2"
                           color="text.secondary"
                           sx={{ display: 'block' }}
                         >
-                          {formatDate(notification.timestamp)}
+                          Scheduled for: {formatDate(notification.scheduledAt)}
+                          {notification.sentAt && ` • Sent at: ${formatDate(notification.sentAt)}`}
                         </Typography>
                       </>
                     }
