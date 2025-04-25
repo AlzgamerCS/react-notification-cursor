@@ -126,6 +126,9 @@ const MainLayout = () => {
         sx={{
           display: "flex",
           minWidth: "100vw",
+          mt: 2,
+          position: 'relative',
+          zIndex: 0,
         }}
       >
         <Box component="main" sx={{ flexGrow: 1, p: 3 }}>

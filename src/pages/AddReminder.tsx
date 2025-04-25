@@ -10,20 +10,27 @@ import {
   Button,
   Alert,
   TextField,
+  FormControlLabel,
+  Switch,
 } from '@mui/material';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { addHours } from 'date-fns';
 import api, { ENDPOINTS, handleApiError } from '../services/api';
 
 type Channel = 'EMAIL' | 'SMS' | 'IN_APP' | 'TELEGRAM';
 
 const AddReminder = () => {
   const { documentId } = useParams<{ documentId: string }>();
+  const location = useLocation();
+  const documentTitle = location.state?.documentTitle || 'Document';
   const navigate = useNavigate();
+  
   const [channel, setChannel] = useState<Channel>('EMAIL');
   const [scheduledAt, setScheduledAt] = useState<Date | null>(new Date());
+  const [createCalendarEvent, setCreateCalendarEvent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -38,16 +45,25 @@ const AddReminder = () => {
     setError(null);
 
     try {
-      await api.post(ENDPOINTS.NOTIFICATIONS.CREATE, {
-        document: {
-          id: documentId
-        },
-        channel: channel,
-        type: 'INITIAL',
+      const endpoint = createCalendarEvent ? ENDPOINTS.NOTIFICATIONS.CREATE_WITH_EVENT : ENDPOINTS.NOTIFICATIONS.CREATE;
+      const payload = {
+        documentId,
+        channel: createCalendarEvent ? 'IN_APP' : channel,
+        type: 'REMINDER',
         scheduledAt: scheduledAt.toISOString(),
-        status: 'PENDING'
-      });
+        status: 'PENDING',
+        ...(createCalendarEvent && {
+          calendarEventDetails: {
+            createCalendarEvent: true,
+            summary: `Reminder: ${documentTitle}`,
+            startDateTime: scheduledAt.toISOString(),
+            endDateTime: addHours(scheduledAt, 1).toISOString(),
+            timeZone: 'GMT+5'
+          }
+        })
+      };
 
+      await api.post(endpoint, payload);
       navigate('/documents');
     } catch (err) {
       const errorMessage = handleApiError(err);
@@ -62,7 +78,7 @@ const AddReminder = () => {
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <Box sx={{ maxWidth: 600, mx: 'auto', mt: 4, p: 2 }}>
         <Typography variant="h4" component="h1" gutterBottom>
-          Add Reminder
+          Add Reminder for {documentTitle}
         </Typography>
 
         {error && (
@@ -79,10 +95,10 @@ const AddReminder = () => {
                 value={channel}
                 label="Notification Channel"
                 onChange={(e) => setChannel(e.target.value as Channel)}
+                disabled={createCalendarEvent}
               >
                 <MenuItem value="EMAIL">Email</MenuItem>
                 <MenuItem value="SMS">SMS</MenuItem>
-                <MenuItem value="IN_APP">In-App</MenuItem>
                 <MenuItem value="TELEGRAM">Telegram</MenuItem>
               </Select>
             </FormControl>
@@ -95,6 +111,22 @@ const AddReminder = () => {
                 disablePast
               />
             </FormControl>
+
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={createCalendarEvent}
+                  onChange={(e) => {
+                    setCreateCalendarEvent(e.target.checked);
+                    if (e.target.checked) {
+                      setChannel('IN_APP');
+                    }
+                  }}
+                />
+              }
+              label="Add to Calendar"
+              sx={{ mb: 3 }}
+            />
 
             <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
               <Button

@@ -214,7 +214,7 @@ const Documents = () => {
                     <Tooltip title="Add Reminder">
                       <IconButton
                         size="small"
-                        onClick={() => navigate(`/add-reminder/${document.id}`)}
+                        onClick={() => navigate(`/add-reminder/${document.id}`, { state: { documentTitle: document.title } })}
                       >
                         <NotificationsIcon />
                       </IconButton>

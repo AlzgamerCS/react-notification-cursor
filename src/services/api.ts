@@ -71,6 +71,7 @@ export const ENDPOINTS = {
   NOTIFICATIONS: {
     LIST: '/notifications/my',
     CREATE: '/notifications',
+    CREATE_WITH_EVENT: '/notifications/with-event',
     DELETE: (id: string) => `/notifications/${id}`,
   },
   USER: {
