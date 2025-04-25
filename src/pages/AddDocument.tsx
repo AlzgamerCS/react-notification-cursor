@@ -12,11 +12,14 @@ import {
   Chip,
   Alert,
   Paper,
+  Switch,
+  FormControlLabel,
 } from '@mui/material';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { useNavigate } from 'react-router-dom';
+import { addHours } from 'date-fns';
 import api, { ENDPOINTS, handleApiError } from '../services/api';
 
 // Document category enum matching backend
@@ -49,6 +52,9 @@ const AddDocument = () => {
   const [status, setStatus] = useState('ACTIVE');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadedFilePath, setUploadedFilePath] = useState('');
+  
+  // Calendar event state
+  const [createCalendarEvent, setCreateCalendarEvent] = useState(false);
   
   // UI state
   const [loading, setLoading] = useState(false);
@@ -111,6 +117,11 @@ const AddDocument = () => {
       return;
     }
 
+    if (createCalendarEvent && !expirationDate) {
+      setError('Please set expiration date for the calendar event');
+      return;
+    }
+
     const documentData = {
       title,
       description,
@@ -118,16 +129,25 @@ const AddDocument = () => {
       expirationDate: expirationDate?.toISOString().split('T')[0],
       status,
       filePath: uploadedFilePath,
-      tags
+      tags,
+      ...(createCalendarEvent && expirationDate && {
+        calendarEventDetails: {
+          createCalendarEvent,
+          summary: title,
+          description: description,
+          startDateTime: expirationDate.toISOString(),
+          endDateTime: addHours(expirationDate, 1).toISOString(),
+          timeZone: 'GMT+5'
+        }
+      })
     };
 
     try {
       setLoading(true);
-      await api.post(ENDPOINTS.DOCUMENTS.CREATE, documentData);
+      const endpoint = createCalendarEvent ? 'documents/with-event' : ENDPOINTS.DOCUMENTS.CREATE;
+      await api.post(endpoint, documentData);
       setSuccess(true);
-      setTimeout(() => {
-        navigate('/documents');
-      }, 2000);
+      navigate('/documents')
     } catch (err) {
       const errorMessage = handleApiError(err);
       setError(errorMessage);
@@ -183,12 +203,14 @@ const AddDocument = () => {
               error={description.length === 255}
             />
 
-            <FormControl fullWidth margin="normal">
-              <InputLabel>Category</InputLabel>
+            <FormControl fullWidth margin="normal" variant="outlined">
+              <InputLabel id="category-label">Category</InputLabel>
               <Select
+                labelId="category-label"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
                 required
+                label="Category"
               >
                 {Object.entries(DocumentCategory).map(([key, value]) => (
                   <MenuItem key={key} value={value}>
@@ -241,21 +263,36 @@ const AddDocument = () => {
             </Box>
 
             <LocalizationProvider dateAdapter={AdapterDateFns}>
-              <DatePicker
-                label="Expiration Date"
-                value={expirationDate}
-                onChange={(newValue) => setExpirationDate(newValue)}
-                sx={{ mt: 2, mb: 2, width: '100%' }}
-                minDate={new Date()} // Prevent past dates
+              <Box sx={{ mb: 2 }}>
+                <DatePicker
+                  label="Expiration Date"
+                  value={expirationDate}
+                  onChange={(newValue) => setExpirationDate(newValue)}
+                  sx={{ width: '100%' }}
+                  minDate={new Date()}
+                />
+              </Box>
+
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={createCalendarEvent}
+                    onChange={(e) => setCreateCalendarEvent(e.target.checked)}
+                  />
+                }
+                label="Add expiration reminder to calendar"
+                sx={{ mb: 2 }}
               />
             </LocalizationProvider>
 
-            <FormControl fullWidth margin="normal">
-              <InputLabel>Status</InputLabel>
+            <FormControl fullWidth margin="normal" variant="outlined">
+              <InputLabel id="status-label">Status</InputLabel>
               <Select
+                labelId="status-label"
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
                 required
+                label="Status"
               >
                 {Object.entries(DocumentStatus).map(([key, value]) => (
                   <MenuItem key={key} value={value}>
@@ -265,7 +302,7 @@ const AddDocument = () => {
               </Select>
             </FormControl>
 
-            <Box sx={{ mt: 2, mb: 2 }}>
+            <Box sx={{ mt: 2 }}>
               <input
                 accept="*/*"
                 style={{ display: 'none' }}
@@ -291,11 +328,6 @@ const AddDocument = () => {
               {uploadedFilePath && (
                 <Alert severity="success" sx={{ mt: 1 }}>
                   File uploaded successfully!
-                </Alert>
-              )}
-              {error && (
-                <Alert severity="error" sx={{ mt: 1 }}>
-                  {error}
                 </Alert>
               )}
             </Box>
