@@ -2,7 +2,6 @@ import { useState } from 'react';
 import {
   Box,
   Button,
-  Container,
   TextField,
   Typography,
   MenuItem,
@@ -14,12 +13,15 @@ import {
   Paper,
   Switch,
   FormControlLabel,
+  Grid,
+  Divider,
 } from '@mui/material';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { useNavigate } from 'react-router-dom';
 import { addHours } from 'date-fns';
+import { CloudUpload } from '@mui/icons-material';
 import api, { ENDPOINTS, handleApiError } from '../services/api';
 
 // Document category enum matching backend
@@ -52,8 +54,6 @@ const AddDocument = () => {
   const [status, setStatus] = useState('ACTIVE');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadedFilePath, setUploadedFilePath] = useState('');
-  
-  // Calendar event state
   const [createCalendarEvent, setCreateCalendarEvent] = useState(false);
   
   // UI state
@@ -94,17 +94,6 @@ const AddDocument = () => {
       setSelectedFile(null);
     } finally {
       setUploading(false);
-    }
-  };
-
-  // Handle tag input
-  const handleTagInputKeyDown = (event: React.KeyboardEvent) => {
-    if (event.key === 'Enter' && tagInput) {
-      event.preventDefault();
-      if (!tags.includes(tagInput)) {
-        setTags([...tags, tagInput]);
-      }
-      setTagInput('');
     }
   };
 
@@ -158,151 +147,200 @@ const AddDocument = () => {
   };
 
   return (
-    <Container maxWidth="md">
-      <Box sx={{ mt: 4, mb: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom>
+    <Box
+      sx={{
+        height: '100vh',
+        overflow: 'hidden',
+        display: 'flex',
+        bgcolor: '#f5f5f5',
+      }}
+    >
+      {/* Left Panel - Header and Alerts */}
+      <Box
+        sx={{
+          width: '300px',
+          p: 3,
+          borderRight: '1px solid',
+          borderColor: 'divider',
+          bgcolor: 'white',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 2,
+        }}
+      >
+        <Typography variant="h5" fontWeight="bold" color="primary">
           Add New Document
         </Typography>
+        
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          Fill in the document details and upload your file to create a new document.
+        </Typography>
 
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
-          </Alert>
-        )}
+        {error && <Alert severity="error" sx={{ width: '100%' }}>{error}</Alert>}
+        {success && <Alert severity="success" sx={{ width: '100%' }}>Document created successfully!</Alert>}
+        
+        <Box sx={{ mt: 'auto' }}>
+          <Button
+            type="submit"
+            variant="contained"
+            fullWidth
+            size="large"
+            disabled={loading || !uploadedFilePath || !title || !category || !expirationDate}
+            onClick={handleSubmit}
+          >
+            {loading ? 'Creating...' : 'Create Document'}
+          </Button>
+        </Box>
+      </Box>
 
-        {success && (
-          <Alert severity="success" sx={{ mb: 2 }}>
-            Document created successfully! Redirecting...
-          </Alert>
-        )}
-
-        <Paper sx={{ p: 3 }}>
-          <Box component="form" onSubmit={handleSubmit} noValidate>
+      {/* Right Panel - Form */}
+      <Box
+        sx={{
+          flex: 1,
+          p: 3,
+          overflowY: 'auto',
+        }}
+      >
+        <Grid container spacing={3}>
+          {/* Basic Information */}
+          <Grid item xs={12} md={6}>
             <TextField
               required
               fullWidth
               label="Title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              margin="normal"
               inputProps={{ maxLength: 255 }}
               helperText={`${title.length}/255 characters`}
               error={title.length === 255}
             />
+          </Grid>
 
+          <Grid item xs={12} md={6}>
+            <FormControl fullWidth>
+              <InputLabel>Category</InputLabel>
+              <Select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                label="Category"
+                required
+              >
+                {Object.entries(DocumentCategory).map(([key, value]) => (
+                  <MenuItem key={key} value={value}>{key}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+
+          <Grid item xs={12}>
             <TextField
               fullWidth
               label="Description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              margin="normal"
               multiline
               rows={3}
               inputProps={{ maxLength: 255 }}
               helperText={`${description.length}/255 characters`}
               error={description.length === 255}
             />
+          </Grid>
 
-            <FormControl fullWidth margin="normal" variant="outlined">
-              <InputLabel id="category-label">Category</InputLabel>
-              <Select
-                labelId="category-label"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                required
-                label="Category"
-              >
-                {Object.entries(DocumentCategory).map(([key, value]) => (
-                  <MenuItem key={key} value={value}>
-                    {key}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            <Box sx={{ mt: 2, mb: 2 }}>
-              <TextField
-                fullWidth
-                label="Add Tags"
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && tagInput) {
-                    e.preventDefault();
-                    if (tags.length >= 10) {
-                      setError('Maximum 10 tags allowed');
-                      return;
-                    }
-                    if (tagInput.length > 50) {
-                      setError('Tag length cannot exceed 50 characters');
-                      return;
-                    }
-                    if (!tags.includes(tagInput)) {
-                      setTags([...tags, tagInput]);
-                      setTagInput('');
-                      setError('');
-                    }
+          {/* Tags Section */}
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="Add Tags"
+              value={tagInput}
+              onChange={(e) => setTagInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && tagInput) {
+                  e.preventDefault();
+                  if (tags.length >= 10) {
+                    setError('Maximum 10 tags allowed');
+                    return;
                   }
-                }}
-                helperText={`Enter to add tag. Maximum 10 tags, 50 characters each. ${tags.length}/10 tags used.`}
-                error={tags.length >= 10 || tagInput.length > 50}
-                inputProps={{ maxLength: 50 }}
-              />
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
+                  if (tagInput.length > 50) {
+                    setError('Tag length cannot exceed 50 characters');
+                    return;
+                  }
+                  if (!tags.includes(tagInput)) {
+                    setTags([...tags, tagInput]);
+                    setTagInput('');
+                    setError('');
+                  }
+                }
+              }}
+              helperText={`Press Enter to add tag. ${tags.length}/10 tags used.`}
+            />
+            {tags.length > 0 && (
+              <Box sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                 {tags.map((tag) => (
                   <Chip
                     key={tag}
                     label={tag}
-                    onDelete={() => {
-                      setTags(tags.filter((t) => t !== tag));
-                      setError('');
-                    }}
+                    onDelete={() => setTags(tags.filter(t => t !== tag))}
                   />
                 ))}
               </Box>
-            </Box>
+            )}
+          </Grid>
 
+          <Grid item xs={12}>
+            <Divider />
+          </Grid>
+
+          {/* Date and Status */}
+          <Grid item xs={12} md={6}>
             <LocalizationProvider dateAdapter={AdapterDateFns}>
-              <Box sx={{ mb: 2 }}>
-                <DatePicker
-                  label="Expiration Date"
-                  value={expirationDate}
-                  onChange={(newValue) => setExpirationDate(newValue)}
-                  sx={{ width: '100%' }}
-                  minDate={new Date()}
-                />
-              </Box>
-
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={createCalendarEvent}
-                    onChange={(e) => setCreateCalendarEvent(e.target.checked)}
-                  />
-                }
-                label="Add expiration reminder to calendar"
-                sx={{ mb: 2 }}
+              <DatePicker
+                label="Expiration Date"
+                value={expirationDate}
+                onChange={(newValue) => setExpirationDate(newValue)}
+                sx={{ width: '100%' }}
+                minDate={new Date()}
               />
             </LocalizationProvider>
+          </Grid>
 
-            <FormControl fullWidth margin="normal" variant="outlined">
-              <InputLabel id="status-label">Status</InputLabel>
+          <Grid item xs={12} md={6}>
+            <FormControl fullWidth>
+              <InputLabel>Status</InputLabel>
               <Select
-                labelId="status-label"
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
-                required
                 label="Status"
+                required
               >
                 {Object.entries(DocumentStatus).map(([key, value]) => (
-                  <MenuItem key={key} value={value}>
-                    {key}
-                  </MenuItem>
+                  <MenuItem key={key} value={value}>{key}</MenuItem>
                 ))}
               </Select>
             </FormControl>
+          </Grid>
 
-            <Box sx={{ mt: 2 }}>
+          <Grid item xs={12}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={createCalendarEvent}
+                  onChange={(e) => setCreateCalendarEvent(e.target.checked)}
+                />
+              }
+              label="Add expiration reminder to calendar"
+            />
+          </Grid>
+
+          {/* File Upload */}
+          <Grid item xs={12}>
+            <Paper
+              sx={{
+                p: 3,
+                border: '2px dashed',
+                borderColor: 'divider',
+                textAlign: 'center',
+              }}
+            >
               <input
                 accept="*/*"
                 style={{ display: 'none' }}
@@ -311,41 +349,33 @@ const AddDocument = () => {
                 onChange={handleFileUpload}
               />
               <label htmlFor="file-upload">
-                <Button 
-                  variant="contained" 
+                <Button
+                  variant="outlined"
                   component="span"
                   disabled={uploading}
+                  startIcon={<CloudUpload />}
                 >
-                  {uploading ? 'Uploading...' : 'Upload File'}
+                  {uploading ? 'Uploading...' : 'Choose File'}
                 </Button>
               </label>
+              
               {selectedFile && (
-                <Typography variant="body2" sx={{ mt: 1 }}>
-                  Selected file: {selectedFile.name}
+                <Typography variant="body2" sx={{ mt: 2 }}>
+                  Selected: {selectedFile.name}
                   {uploading && ' (Uploading...)'}
                 </Typography>
               )}
+              
               {uploadedFilePath && (
-                <Alert severity="success" sx={{ mt: 1 }}>
+                <Alert severity="success" sx={{ mt: 2 }}>
                   File uploaded successfully!
                 </Alert>
               )}
-            </Box>
-
-            <Box sx={{ mt: 3 }}>
-              <Button
-                type="submit"
-                variant="contained"
-                fullWidth
-                disabled={loading || !uploadedFilePath || !title || !category || !expirationDate}
-              >
-                {loading ? 'Creating...' : 'Create Document'}
-              </Button>
-            </Box>
-          </Box>
-        </Paper>
+            </Paper>
+          </Grid>
+        </Grid>
       </Box>
-    </Container>
+    </Box>
   );
 };
 
