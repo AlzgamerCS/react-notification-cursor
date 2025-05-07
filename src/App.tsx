@@ -11,6 +11,8 @@ import MainLayout from "./layouts/MainLayout";
 
 // Lazy load pages
 const Login = lazy(() => import("./pages/Login"));
+const Register = lazy(() => import("./pages/Register"));
+const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Documents = lazy(() => import("./pages/Documents"));
 const AddDocument = lazy(() => import("./pages/AddDocument"));
@@ -38,6 +40,8 @@ function App() {
           <Routes>
             {/* Public routes */}
             <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
 
             {/* Protected routes */}
@@ -51,8 +55,8 @@ function App() {
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/documents" element={<Documents />} />
-              <Route path="/add-document" element={<AddDocument />} />
-              <Route path="/add-reminder/:documentId" element={<AddReminder />} />
+              <Route path="/documents/add" element={<AddDocument />} />
+              <Route path="/reminders/add" element={<AddReminder />} />
               <Route path="/notifications" element={<Notifications />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/settings" element={<Settings />} />

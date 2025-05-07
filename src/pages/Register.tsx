@@ -11,28 +11,63 @@ import {
   Link,
 } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
-import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { login, clearError } from '../store/slices/authSlice';
+import { register, clearError } from '../store/slices/authSlice';
 import type { AppDispatch, RootState } from '../store';
 import backgroundImage from '../assets/login_background.jpg';
 
-const Login = () => {
+const Register = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
-  const { isLoading, error, isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const { isLoading, error, isAuthenticated, user } = useSelector((state: RootState) => state.auth);
 
   const [formData, setFormData] = useState({
+    name: '',
     email: '',
     password: '',
+    confirmPassword: '',
   });
   const [showPassword, setShowPassword] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
+    if (isAuthenticated && user?.emailVerified) {
+      navigate('/dashboard');
+    } else if (isAuthenticated && !user?.emailVerified) {
+      navigate('/verify-email');
+    }
     return () => {
       dispatch(clearError());
     };
-  }, [dispatch]);
+  }, [isAuthenticated, user, navigate, dispatch]);
+
+  const validateForm = () => {
+    const errors: Record<string, string> = {};
+    
+    if (!formData.name.trim()) {
+      errors.name = 'Name is required';
+    }
+    
+    if (!formData.email) {
+      errors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      errors.email = 'Please enter a valid email address';
+    }
+    
+    if (!formData.password) {
+      errors.password = 'Password is required';
+    } else if (formData.password.length < 8) {
+      errors.password = 'Password must be at least 8 characters long';
+    }
+    
+    if (formData.password !== formData.confirmPassword) {
+      errors.confirmPassword = 'Passwords do not match';
+    }
+    
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -40,6 +75,13 @@ const Login = () => {
       ...prev,
       [name]: value,
     }));
+    // Clear validation error when user starts typing
+    if (validationErrors[name]) {
+      setValidationErrors(prev => ({
+        ...prev,
+        [name]: '',
+      }));
+    }
   };
 
   const handleClickShowPassword = () => {
@@ -52,18 +94,13 @@ const Login = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      const result = await dispatch(login(formData)).unwrap();
-      // Navigate based on the response data
-      if (result.emailVerified) {
-        navigate('/dashboard');
-      } else {
-        navigate('/verify-email');
-      }
-    } catch (err) {
-      // Error is handled by the reducer, no need to do anything here
-      // The error will be displayed in the UI through the error state
+    
+    if (!validateForm()) {
+      return;
     }
+    
+    const { confirmPassword, ...registerData } = formData;
+    await dispatch(register(registerData));
   };
 
   return (
@@ -99,27 +136,44 @@ const Login = () => {
         }}
       >
         <Typography component="h1" variant="h5" align="center" gutterBottom>
-          <strong>Log In to Automated Notification System</strong>
+          <strong>Create an Account</strong>
         </Typography>
         <Typography
           component="h2"
           variant="subtitle2"
           align="center"
           gutterBottom
+          sx={{ mb: 2 }}
         >
-          Securely manage document expirations and notifications
+          Join the Automated Notification System
         </Typography>
+        
         {error && (
           <Alert severity="error" sx={{ mb: 2, width: '100%' }}>
             {error}
           </Alert>
         )}
+
         <Box
           component="form"
           onSubmit={handleSubmit}
-          noValidate
           sx={{ mt: 1, width: '90%' }}
         >
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            id="name"
+            label="Full Name"
+            name="name"
+            autoComplete="name"
+            autoFocus
+            value={formData.name}
+            onChange={handleChange}
+            error={!!validationErrors.name}
+            helperText={validationErrors.name}
+            disabled={isLoading}
+          />
           <TextField
             margin="normal"
             required
@@ -128,11 +182,11 @@ const Login = () => {
             label="Email Address"
             name="email"
             autoComplete="email"
-            autoFocus
             value={formData.email}
             onChange={handleChange}
+            error={!!validationErrors.email}
+            helperText={validationErrors.email}
             disabled={isLoading}
-            error={!!error}
           />
           <TextField
             margin="normal"
@@ -142,11 +196,12 @@ const Login = () => {
             label="Password"
             type={showPassword ? 'text' : 'password'}
             id="password"
-            autoComplete="current-password"
+            autoComplete="new-password"
             value={formData.password}
             onChange={handleChange}
+            error={!!validationErrors.password}
+            helperText={validationErrors.password}
             disabled={isLoading}
-            error={!!error}
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
@@ -162,6 +217,21 @@ const Login = () => {
               ),
             }}
           />
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            name="confirmPassword"
+            label="Confirm Password"
+            type={showPassword ? 'text' : 'password'}
+            id="confirmPassword"
+            autoComplete="new-password"
+            value={formData.confirmPassword}
+            onChange={handleChange}
+            error={!!validationErrors.confirmPassword}
+            helperText={validationErrors.confirmPassword}
+            disabled={isLoading}
+          />
           <Button
             type="submit"
             fullWidth
@@ -169,11 +239,11 @@ const Login = () => {
             sx={{ mt: 3, mb: 2 }}
             disabled={isLoading}
           >
-            {isLoading ? 'Signing in...' : 'Log In'}
+            {isLoading ? 'Creating Account...' : 'Sign Up'}
           </Button>
           <Box sx={{ textAlign: 'center' }}>
-            <Link component={RouterLink} to="/register" variant="body2">
-              Don't have an account? Sign up
+            <Link component={RouterLink} to="/login" variant="body2">
+              Already have an account? Log in
             </Link>
           </Box>
         </Box>
@@ -182,4 +252,4 @@ const Login = () => {
   );
 };
 
-export default Login; 
+export default Register; 
