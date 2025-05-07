@@ -319,30 +319,31 @@ const Documents = () => {
             <Table sx={{ minWidth: 800 }}>
               <TableHead>
                 <TableRow>
-                  <TableCell sx={{ fontWeight: 'bold', backgroundColor: alpha(theme.palette.primary.main, 0.04), whiteSpace: 'nowrap' }}>Title</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold', backgroundColor: alpha(theme.palette.primary.main, 0.04), whiteSpace: 'nowrap' }}>Description</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold', backgroundColor: alpha(theme.palette.primary.main, 0.04), whiteSpace: 'nowrap' }}>Category</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold', backgroundColor: alpha(theme.palette.primary.main, 0.04), whiteSpace: 'nowrap' }}>Tags</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold', backgroundColor: alpha(theme.palette.primary.main, 0.04), whiteSpace: 'nowrap' }}>Expiration Date</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold', backgroundColor: alpha(theme.palette.primary.main, 0.04), whiteSpace: 'nowrap' }}>Status</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold', backgroundColor: alpha(theme.palette.primary.main, 0.04), whiteSpace: 'nowrap' }}>Actions</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', backgroundColor: alpha(theme.palette.primary.main, 0.08), whiteSpace: 'nowrap' }}>Title</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', backgroundColor: alpha(theme.palette.primary.main, 0.08), whiteSpace: 'nowrap' }}>Description</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', backgroundColor: alpha(theme.palette.primary.main, 0.08), whiteSpace: 'nowrap' }}>Category</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', backgroundColor: alpha(theme.palette.primary.main, 0.08), whiteSpace: 'nowrap' }}>Tags</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', backgroundColor: alpha(theme.palette.primary.main, 0.08), whiteSpace: 'nowrap' }}>Expiration Date</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', backgroundColor: alpha(theme.palette.primary.main, 0.08), whiteSpace: 'nowrap' }}>Status</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', backgroundColor: alpha(theme.palette.primary.main, 0.08), whiteSpace: 'nowrap' }}>Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {filteredAndSortedDocuments.map((document) => (
                   <TableRow 
                     key={document.id}
-                    sx={{ '&:hover': { backgroundColor: alpha(theme.palette.primary.main, 0.02) } }}
+                    sx={{ '&:hover': { backgroundColor: alpha(theme.palette.primary.main, 0.04) } }}
                   >
-                    <TableCell sx={{ fontWeight: 500 }}>{document.title}</TableCell>
+                    <TableCell sx={{ fontWeight: 500, color: theme.palette.text.primary }}>{document.title}</TableCell>
                     <TableCell sx={{ color: theme.palette.text.secondary }}>{document.description}</TableCell>
                     <TableCell>
                       <Chip
                         label={document.category}
                         size="small"
                         sx={{ 
-                          backgroundColor: alpha(theme.palette.primary.main, 0.1),
-                          color: theme.palette.primary.main,
+                          backgroundColor: theme.palette.primary.main,
+                          color: theme.palette.primary.contrastText,
+                          fontWeight: 500
                         }}
                       />
                     </TableCell>
@@ -354,8 +355,14 @@ const Documents = () => {
                             label={tag}
                             size="small"
                             sx={{ 
-                              backgroundColor: alpha(theme.palette.secondary.main, 0.1),
-                              color: theme.palette.secondary.main,
+                              backgroundColor: alpha(theme.palette.primary.main, 0.15),
+                              color: theme.palette.primary.dark,
+                              border: '1px solid',
+                              borderColor: alpha(theme.palette.primary.main, 0.3),
+                              fontWeight: 600,
+                              '&:hover': {
+                                backgroundColor: alpha(theme.palette.primary.main, 0.2)
+                              }
                             }}
                           />
                         ))}

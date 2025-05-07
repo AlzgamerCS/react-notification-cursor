@@ -26,9 +26,14 @@ const theme = createTheme({
   palette: {
     primary: {
       main: "#fb9455",
+      contrastText: "#ffffff",
     },
     secondary: {
       main: "#ffffff",
+    },
+    background: {
+      default: "#ffffff",
+      paper: "#ffffff",
     },
   },
 });
@@ -65,11 +70,11 @@ const MainLayout = () => {
       }}>
         <AppBar 
           position="fixed" 
-          elevation={0}
+          elevation={1}
           sx={{
             borderBottom: '1px solid',
             borderColor: 'divider',
-            backgroundColor: 'white'
+            backgroundColor: 'primary.main'
           }}
         >
           <Toolbar sx={{ justifyContent: "space-between", px: 3 }}>
@@ -78,7 +83,7 @@ const MainLayout = () => {
               <Button
                 component={Link}
                 to="/"
-                color="primary"
+                color="secondary"
                 startIcon={<Home />}
                 sx={{ textTransform: "none" }}
               >
@@ -87,7 +92,7 @@ const MainLayout = () => {
               <Button
                 component={Link}
                 to="/dashboard"
-                color="primary"
+                color="secondary"
                 startIcon={<DashboardIcon />}
                 sx={{ textTransform: "none" }}
               >
@@ -100,7 +105,7 @@ const MainLayout = () => {
               <Button
                 component={Link}
                 to="/documents"
-                color="primary"
+                color="secondary"
                 startIcon={<Description />}
                 sx={{ textTransform: "none" }}
               >
@@ -109,7 +114,7 @@ const MainLayout = () => {
               <Button
                 component={Link}
                 to="/notifications"
-                color="primary"
+                color="secondary"
                 startIcon={<Notifications />}
                 sx={{ textTransform: "none" }}
               >
