@@ -56,15 +56,29 @@ const MainLayout = () => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-        <AppBar position="fixed">
-          <Toolbar sx={{ justifyContent: "space-between" }}>
+      <Box sx={{ 
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: '100vh',
+        width: '100vw',
+        overflow: 'hidden'
+      }}>
+        <AppBar 
+          position="fixed" 
+          elevation={0}
+          sx={{
+            borderBottom: '1px solid',
+            borderColor: 'divider',
+            backgroundColor: 'white'
+          }}
+        >
+          <Toolbar sx={{ justifyContent: "space-between", px: 3 }}>
             {/* Left-side navigation */}
-            <Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
               <Button
                 component={Link}
                 to="/"
-                color="inherit"
+                color="primary"
                 startIcon={<Home />}
                 sx={{ textTransform: "none" }}
               >
@@ -73,7 +87,7 @@ const MainLayout = () => {
               <Button
                 component={Link}
                 to="/dashboard"
-                color="inherit"
+                color="primary"
                 startIcon={<DashboardIcon />}
                 sx={{ textTransform: "none" }}
               >
@@ -82,11 +96,11 @@ const MainLayout = () => {
             </Box>
 
             {/* Right-side navigation */}
-            <Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
               <Button
                 component={Link}
                 to="/documents"
-                color="inherit"
+                color="primary"
                 startIcon={<Description />}
                 sx={{ textTransform: "none" }}
               >
@@ -95,14 +109,25 @@ const MainLayout = () => {
               <Button
                 component={Link}
                 to="/notifications"
-                color="inherit"
+                color="primary"
                 startIcon={<Notifications />}
                 sx={{ textTransform: "none" }}
               >
                 Notifications
               </Button>
-              <IconButton onClick={handleMenuOpen} sx={{ ml: 2 }}>
-                <Avatar alt={user?.name || "User"} src="/path/to/profile-pic.jpg">
+              <IconButton 
+                onClick={handleMenuOpen} 
+                sx={{ 
+                  ml: 2,
+                  width: 40,
+                  height: 40
+                }}
+              >
+                <Avatar 
+                  alt={user?.name || "User"} 
+                  src="/path/to/profile-pic.jpg"
+                  sx={{ width: 32, height: 32 }}
+                >
                   {user?.name?.charAt(0) || "U"}
                 </Avatar>
               </IconButton>
@@ -110,31 +135,61 @@ const MainLayout = () => {
                 anchorEl={anchorEl}
                 open={Boolean(anchorEl)}
                 onClose={handleMenuClose}
+                PaperProps={{
+                  elevation: 0,
+                  sx: {
+                    mt: 1.5,
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    borderRadius: 2,
+                    minWidth: 180,
+                  },
+                }}
+                transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
               >
-                <MenuItem component={Link} to="/profile" onClick={handleMenuClose}>
+                <MenuItem 
+                  component={Link} 
+                  to="/profile" 
+                  onClick={handleMenuClose}
+                  sx={{ py: 1.5 }}
+                >
                   Profile
                 </MenuItem>
-                <MenuItem component={Link} to="/settings" onClick={handleMenuClose}>
+                <MenuItem 
+                  component={Link} 
+                  to="/settings" 
+                  onClick={handleMenuClose}
+                  sx={{ py: 1.5 }}
+                >
                   Settings
                 </MenuItem>
-                <MenuItem onClick={handleLogout}>Logout</MenuItem>
+                <MenuItem 
+                  onClick={handleLogout}
+                  sx={{ 
+                    py: 1.5,
+                    color: 'error.main',
+                    '&:hover': {
+                      backgroundColor: 'error.lighter',
+                    }
+                  }}
+                >
+                  Logout
+                </MenuItem>
               </Menu>
             </Box>
           </Toolbar>
         </AppBar>
-        
-        {/* Toolbar placeholder to prevent content from going under AppBar */}
-        <Toolbar />
         
         {/* Main content */}
         <Box
           component="main"
           sx={{
             flexGrow: 1,
-            display: 'flex',
+            width: '100%',
+            mt: '64px', // Height of AppBar
+            overflow: 'auto',
             position: 'relative',
-            height: 'calc(100vh - 64px)', // Subtract AppBar height
-            overflow: 'hidden',
           }}
         >
           <Outlet />

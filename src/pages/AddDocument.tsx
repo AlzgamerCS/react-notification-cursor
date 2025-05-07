@@ -23,6 +23,7 @@ import { useNavigate } from 'react-router-dom';
 import { addHours } from 'date-fns';
 import { CloudUpload } from '@mui/icons-material';
 import api, { ENDPOINTS, handleApiError } from '../services/api';
+import { alpha } from '@mui/material/styles';
 
 // Document category enum matching backend
 const DocumentCategory = {
@@ -149,23 +150,26 @@ const AddDocument = () => {
   return (
     <Box
       sx={{
-        height: '100vh',
-        overflow: 'hidden',
+        width: '100%',
+        minHeight: '100%',
         display: 'flex',
-        bgcolor: '#f5f5f5',
+        bgcolor: (theme) => alpha(theme.palette.primary.main, 0.04),
       }}
     >
       {/* Left Panel - Header and Alerts */}
       <Box
         sx={{
-          width: '300px',
+          width: { xs: '100%', md: '300px' },
           p: 3,
           borderRight: '1px solid',
           borderColor: 'divider',
           bgcolor: 'white',
-          display: 'flex',
+          display: { xs: 'none', md: 'flex' },
           flexDirection: 'column',
           gap: 2,
+          position: 'sticky',
+          top: 0,
+          height: 'fit-content',
         }}
       >
         <Typography variant="h5" fontWeight="bold" color="primary">
@@ -193,187 +197,234 @@ const AddDocument = () => {
         </Box>
       </Box>
 
+      {/* Mobile Header */}
+      <Box
+        sx={{
+          display: { xs: 'block', md: 'none' },
+          width: '100%',
+          p: 3,
+          bgcolor: 'white',
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+          position: 'sticky',
+          top: 0,
+          zIndex: 1,
+        }}
+      >
+        <Typography variant="h5" fontWeight="bold" color="primary" gutterBottom>
+          Add New Document
+        </Typography>
+        
+        <Typography variant="body2" color="text.secondary">
+          Fill in the document details and upload your file to create a new document.
+        </Typography>
+
+        {(error || success) && (
+          <Box sx={{ mt: 2 }}>
+            {error && <Alert severity="error" sx={{ width: '100%' }}>{error}</Alert>}
+            {success && <Alert severity="success" sx={{ width: '100%' }}>Document created successfully!</Alert>}
+          </Box>
+        )}
+      </Box>
+
       {/* Right Panel - Form */}
       <Box
         sx={{
           flex: 1,
           p: 3,
-          overflowY: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
         }}
       >
-        <Grid container spacing={3}>
-          {/* Basic Information */}
-          <Grid item xs={12} md={6}>
-            <TextField
-              required
-              fullWidth
-              label="Title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              inputProps={{ maxLength: 255 }}
-              helperText={`${title.length}/255 characters`}
-              error={title.length === 255}
-            />
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <FormControl fullWidth>
-              <InputLabel>Category</InputLabel>
-              <Select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                label="Category"
+        <Paper sx={{ p: { xs: 2, md: 3 }, borderRadius: 2 }}>
+          <Grid container spacing={3}>
+            {/* Basic Information */}
+            <Grid item xs={12} md={6}>
+              <TextField
                 required
-              >
-                {Object.entries(DocumentCategory).map(([key, value]) => (
-                  <MenuItem key={key} value={value}>{key}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              label="Description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              multiline
-              rows={3}
-              inputProps={{ maxLength: 255 }}
-              helperText={`${description.length}/255 characters`}
-              error={description.length === 255}
-            />
-          </Grid>
-
-          {/* Tags Section */}
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              label="Add Tags"
-              value={tagInput}
-              onChange={(e) => setTagInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && tagInput) {
-                  e.preventDefault();
-                  if (tags.length >= 10) {
-                    setError('Maximum 10 tags allowed');
-                    return;
-                  }
-                  if (tagInput.length > 50) {
-                    setError('Tag length cannot exceed 50 characters');
-                    return;
-                  }
-                  if (!tags.includes(tagInput)) {
-                    setTags([...tags, tagInput]);
-                    setTagInput('');
-                    setError('');
-                  }
-                }
-              }}
-              helperText={`Press Enter to add tag. ${tags.length}/10 tags used.`}
-            />
-            {tags.length > 0 && (
-              <Box sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {tags.map((tag) => (
-                  <Chip
-                    key={tag}
-                    label={tag}
-                    onDelete={() => setTags(tags.filter(t => t !== tag))}
-                  />
-                ))}
-              </Box>
-            )}
-          </Grid>
-
-          <Grid item xs={12}>
-            <Divider />
-          </Grid>
-
-          {/* Date and Status */}
-          <Grid item xs={12} md={6}>
-            <LocalizationProvider dateAdapter={AdapterDateFns}>
-              <DatePicker
-                label="Expiration Date"
-                value={expirationDate}
-                onChange={(newValue) => setExpirationDate(newValue)}
-                sx={{ width: '100%' }}
-                minDate={new Date()}
+                fullWidth
+                label="Title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                inputProps={{ maxLength: 255 }}
+                helperText={`${title.length}/255 characters`}
+                error={title.length === 255}
               />
-            </LocalizationProvider>
-          </Grid>
+            </Grid>
 
-          <Grid item xs={12} md={6}>
-            <FormControl fullWidth>
-              <InputLabel>Status</InputLabel>
-              <Select
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-                label="Status"
-                required
-              >
-                {Object.entries(DocumentStatus).map(([key, value]) => (
-                  <MenuItem key={key} value={value}>{key}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-
-          <Grid item xs={12}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={createCalendarEvent}
-                  onChange={(e) => setCreateCalendarEvent(e.target.checked)}
-                />
-              }
-              label="Add expiration reminder to calendar"
-            />
-          </Grid>
-
-          {/* File Upload */}
-          <Grid item xs={12}>
-            <Paper
-              sx={{
-                p: 3,
-                border: '2px dashed',
-                borderColor: 'divider',
-                textAlign: 'center',
-              }}
-            >
-              <input
-                accept="*/*"
-                style={{ display: 'none' }}
-                id="file-upload"
-                type="file"
-                onChange={handleFileUpload}
-              />
-              <label htmlFor="file-upload">
-                <Button
-                  variant="outlined"
-                  component="span"
-                  disabled={uploading}
-                  startIcon={<CloudUpload />}
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth>
+                <InputLabel>Category</InputLabel>
+                <Select
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  label="Category"
+                  required
                 >
-                  {uploading ? 'Uploading...' : 'Choose File'}
-                </Button>
-              </label>
-              
-              {selectedFile && (
-                <Typography variant="body2" sx={{ mt: 2 }}>
-                  Selected: {selectedFile.name}
-                  {uploading && ' (Uploading...)'}
-                </Typography>
+                  {Object.entries(DocumentCategory).map(([key, value]) => (
+                    <MenuItem key={key} value={value}>{key}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                multiline
+                rows={3}
+                inputProps={{ maxLength: 255 }}
+                helperText={`${description.length}/255 characters`}
+                error={description.length === 255}
+              />
+            </Grid>
+
+            {/* Tags Section */}
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Add Tags"
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && tagInput) {
+                    e.preventDefault();
+                    if (tags.length >= 10) {
+                      setError('Maximum 10 tags allowed');
+                      return;
+                    }
+                    if (tagInput.length > 50) {
+                      setError('Tag length cannot exceed 50 characters');
+                      return;
+                    }
+                    if (!tags.includes(tagInput)) {
+                      setTags([...tags, tagInput]);
+                      setTagInput('');
+                      setError('');
+                    }
+                  }
+                }}
+                helperText={`Press Enter to add tag. ${tags.length}/10 tags used.`}
+              />
+              {tags.length > 0 && (
+                <Box sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  {tags.map((tag) => (
+                    <Chip
+                      key={tag}
+                      label={tag}
+                      onDelete={() => setTags(tags.filter(t => t !== tag))}
+                    />
+                  ))}
+                </Box>
               )}
-              
-              {uploadedFilePath && (
-                <Alert severity="success" sx={{ mt: 2 }}>
-                  File uploaded successfully!
-                </Alert>
-              )}
-            </Paper>
+            </Grid>
+
+            <Grid item xs={12}>
+              <Divider />
+            </Grid>
+
+            {/* Date and Status */}
+            <Grid item xs={12} md={6}>
+              <LocalizationProvider dateAdapter={AdapterDateFns}>
+                <DatePicker
+                  label="Expiration Date"
+                  value={expirationDate}
+                  onChange={(newValue) => setExpirationDate(newValue)}
+                  sx={{ width: '100%' }}
+                  minDate={new Date()}
+                />
+              </LocalizationProvider>
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth>
+                <InputLabel>Status</InputLabel>
+                <Select
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value)}
+                  label="Status"
+                  required
+                >
+                  {Object.entries(DocumentStatus).map(([key, value]) => (
+                    <MenuItem key={key} value={value}>{key}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            <Grid item xs={12}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={createCalendarEvent}
+                    onChange={(e) => setCreateCalendarEvent(e.target.checked)}
+                  />
+                }
+                label="Add expiration reminder to calendar"
+              />
+            </Grid>
+
+            {/* File Upload */}
+            <Grid item xs={12}>
+              <Paper
+                sx={{
+                  p: 3,
+                  border: '2px dashed',
+                  borderColor: 'divider',
+                  textAlign: 'center',
+                }}
+              >
+                <input
+                  accept="*/*"
+                  style={{ display: 'none' }}
+                  id="file-upload"
+                  type="file"
+                  onChange={handleFileUpload}
+                />
+                <label htmlFor="file-upload">
+                  <Button
+                    variant="outlined"
+                    component="span"
+                    disabled={uploading}
+                    startIcon={<CloudUpload />}
+                  >
+                    {uploading ? 'Uploading...' : 'Choose File'}
+                  </Button>
+                </label>
+                
+                {selectedFile && (
+                  <Typography variant="body2" sx={{ mt: 2 }}>
+                    Selected: {selectedFile.name}
+                    {uploading && ' (Uploading...)'}
+                  </Typography>
+                )}
+                
+                {uploadedFilePath && (
+                  <Alert severity="success" sx={{ mt: 2 }}>
+                    File uploaded successfully!
+                  </Alert>
+                )}
+              </Paper>
+            </Grid>
           </Grid>
-        </Grid>
+
+          {/* Mobile Submit Button */}
+          <Box sx={{ display: { xs: 'block', md: 'none' }, mt: 3 }}>
+            <Button
+              type="submit"
+              variant="contained"
+              fullWidth
+              size="large"
+              disabled={loading || !uploadedFilePath || !title || !category || !expirationDate}
+              onClick={handleSubmit}
+            >
+              {loading ? 'Creating...' : 'Create Document'}
+            </Button>
+          </Box>
+        </Paper>
       </Box>
     </Box>
   );
