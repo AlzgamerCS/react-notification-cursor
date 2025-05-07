@@ -28,6 +28,8 @@ export interface ResendVerificationRequest {
 }
 
 export interface LoginResponse {
+  id: string;
+  createdAt: string | undefined;
   token: string;
   user: User;
   name: string;
@@ -38,6 +40,8 @@ export interface LoginResponse {
 }
 
 export interface RegisterResponse {
+  id: string;
+  createdAt: string | undefined;
   token: string;
   name: string;
   email: string;

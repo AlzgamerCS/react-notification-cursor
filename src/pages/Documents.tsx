@@ -189,7 +189,7 @@ const Documents = () => {
         <Button
           variant="contained"
           startIcon={<AddIcon />}
-          onClick={() => navigate('/add-document')}
+          onClick={() => navigate('/documents/add')}
         >
           Add Document
         </Button>
@@ -321,7 +321,9 @@ const Documents = () => {
                     <Tooltip title="Add Reminder">
                       <IconButton
                         size="small"
-                        onClick={() => navigate(`/add-reminder/${document.id}`, { state: { documentTitle: document.title } })}
+                        onClick={() => navigate(`/reminders/add/${document.id}`, { 
+                          state: { documentTitle: document.title } 
+                        })}
                       >
                         <NotificationsIcon />
                       </IconButton>

@@ -56,7 +56,7 @@ function App() {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/documents" element={<Documents />} />
               <Route path="/documents/add" element={<AddDocument />} />
-              <Route path="/reminders/add" element={<AddReminder />} />
+              <Route path="/reminders/add/:documentId" element={<AddReminder />} />
               <Route path="/notifications" element={<Notifications />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/settings" element={<Settings />} />
