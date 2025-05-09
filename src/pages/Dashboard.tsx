@@ -1,49 +1,82 @@
 import { Box, Grid, Paper, Typography } from '@mui/material';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import api, { ENDPOINTS, handleApiError } from '../services/api';
 
-// Mock data
-const mockDocuments = [
-  {
-    id: 1,
-    name: 'Business License',
-    expiryDate: '2024-06-15',
-    status: 'urgent',
-    daysUntilExpiry: 15,
-  },
-  {
-    id: 2,
-    name: 'Insurance Policy',
-    expiryDate: '2024-08-20',
-    status: 'soon',
-    daysUntilExpiry: 45,
-  },
-  {
-    id: 3,
-    name: 'Health Certificate',
-    expiryDate: '2024-12-31',
-    status: 'good',
-    daysUntilExpiry: 120,
-  },
-];
+interface Document {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  tags: string[];
+  expirationDate: string;
+  filePath: string | null;
+  status: string;
+  ownerId: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 const Dashboard = () => {
-  const [documents] = useState(mockDocuments);
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'urgent':
-        return '#ff1744';
-      case 'soon':
-        return '#ffab00';
-      case 'good':
-        return '#00c853';
-      default:
-        return '#757575';
+  useEffect(() => {
+    fetchDocuments();
+  }, []);
+
+  const fetchDocuments = async () => {
+    try {
+      const response = await api.get<Document[]>(ENDPOINTS.DOCUMENTS.LIST);
+      setDocuments(response.data);
+      setError(null);
+    } catch (err) {
+      const errorMessage = handleApiError(err);
+      setError(errorMessage);
+      console.error('Error fetching documents:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
+  const getStatusColor = (daysUntilExpiry: number) => {
+    if (daysUntilExpiry <= 15) return '#ff1744'; // urgent
+    if (daysUntilExpiry <= 45) return '#ffab00'; // soon
+    return '#00c853'; // good
+  };
+
+  const getDocumentStatus = (expirationDate: string) => {
+    const today = new Date();
+    const expiry = new Date(expirationDate);
+    const daysUntilExpiry = Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (daysUntilExpiry <= 15) return 'urgent';
+    if (daysUntilExpiry <= 45) return 'soon';
+    return 'good';
+  };
+
+  const getDocumentsWithStatus = (status: string) => {
+    return documents.filter(doc => getDocumentStatus(doc.expirationDate) === status);
+  };
+
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <Typography>Loading...</Typography>
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ p: 3 }}>
+        <Typography color="error">{error}</Typography>
+      </Box>
+    );
+  }
+
   return (
-    <Box sx={{ flexGrow: 1 }}>
+    <Box sx={{ flexGrow: 1, p: 3 }}>
       <Typography variant="h4" gutterBottom>
         Dashboard
       </Typography>
@@ -63,7 +96,7 @@ const Dashboard = () => {
               Urgent Renewals
             </Typography>
             <Typography variant="h3" component="div">
-              {documents.filter(doc => doc.status === 'urgent').length}
+              {getDocumentsWithStatus('urgent').length}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               Documents requiring immediate attention
@@ -84,7 +117,7 @@ const Dashboard = () => {
               Upcoming Renewals
             </Typography>
             <Typography variant="h3" component="div">
-              {documents.filter(doc => doc.status === 'soon').length}
+              {getDocumentsWithStatus('soon').length}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               Documents expiring soon
@@ -105,7 +138,7 @@ const Dashboard = () => {
               Valid Documents
             </Typography>
             <Typography variant="h3" component="div">
-              {documents.filter(doc => doc.status === 'good').length}
+              {getDocumentsWithStatus('good').length}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               Documents in good standing
@@ -119,37 +152,46 @@ const Dashboard = () => {
             <Typography variant="h6" gutterBottom>
               Recent Documents
             </Typography>
-            {documents.map(doc => (
-              <Box
-                key={doc.id}
-                sx={{
-                  p: 2,
-                  mb: 1,
-                  border: 1,
-                  borderColor: 'grey.200',
-                  borderRadius: 1,
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                }}
-              >
-                <Box>
-                  <Typography variant="subtitle1">{doc.name}</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Expires: {doc.expiryDate}
-                  </Typography>
-                </Box>
-                <Typography
-                  variant="body2"
-                  sx={{
-                    color: getStatusColor(doc.status),
-                    fontWeight: 'bold',
-                  }}
-                >
-                  {doc.daysUntilExpiry} days remaining
-                </Typography>
-              </Box>
-            ))}
+            {documents
+              .sort((a, b) => new Date(a.expirationDate).getTime() - new Date(b.expirationDate).getTime())
+              .slice(0, 5)
+              .map(doc => {
+                const today = new Date();
+                const expiry = new Date(doc.expirationDate);
+                const daysUntilExpiry = Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+                
+                return (
+                  <Box
+                    key={doc.id}
+                    sx={{
+                      p: 2,
+                      mb: 1,
+                      border: 1,
+                      borderColor: 'grey.200',
+                      borderRadius: 1,
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Box>
+                      <Typography variant="subtitle1">{doc.title}</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Expires: {new Date(doc.expirationDate).toLocaleDateString()}
+                      </Typography>
+                    </Box>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: getStatusColor(daysUntilExpiry),
+                        fontWeight: 'bold',
+                      }}
+                    >
+                      {daysUntilExpiry} days remaining
+                    </Typography>
+                  </Box>
+                );
+              })}
           </Paper>
         </Grid>
       </Grid>

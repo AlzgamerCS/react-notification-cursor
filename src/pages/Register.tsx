@@ -9,8 +9,9 @@ import {
   InputAdornment,
   IconButton,
   Link,
+  Tooltip,
 } from '@mui/material';
-import { Visibility, VisibilityOff } from '@mui/icons-material';
+import { Visibility, VisibilityOff, Telegram } from '@mui/icons-material';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { register, clearError } from '../store/slices/authSlice';
@@ -27,6 +28,7 @@ const Register = () => {
     email: '',
     password: '',
     confirmPassword: '',
+    telegramChatId: '',
   });
   const [showPassword, setShowPassword] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
@@ -90,6 +92,10 @@ const Register = () => {
 
   const handleMouseDownPassword = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
+  };
+
+  const handleOpenTelegramBot = () => {
+    window.open('https://t.me/nu_notifier_bot', '_blank');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -232,6 +238,28 @@ const Register = () => {
             helperText={validationErrors.confirmPassword}
             disabled={isLoading}
           />
+          <Box sx={{ mt: 2, mb: 2 }}>
+            <Button
+              fullWidth
+              variant="outlined"
+              startIcon={<Telegram />}
+              onClick={handleOpenTelegramBot}
+              sx={{ mb: 2 }}
+            >
+              Open Telegram Bot
+            </Button>
+            <TextField
+              fullWidth
+              id="telegramChatId"
+              label="Telegram Chat ID (Optional)"
+              name="telegramChatId"
+              value={formData.telegramChatId}
+              onChange={handleChange}
+              error={!!validationErrors.telegramChatId}
+              helperText={validationErrors.telegramChatId || "Optional: Send any message to @nu_notifier_bot on Telegram to get your Chat ID"}
+              disabled={isLoading}
+            />
+          </Box>
           <Button
             type="submit"
             fullWidth
