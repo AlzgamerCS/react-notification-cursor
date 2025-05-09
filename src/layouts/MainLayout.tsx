@@ -13,7 +13,6 @@ import { CssBaseline } from "@mui/material";
 import { useState } from "react";
 import { Link, Outlet, useNavigate } from "react-router-dom";
 import {
-  Home,
   Dashboard as DashboardIcon,
   Notifications,
   Description,
@@ -80,15 +79,6 @@ const MainLayout = () => {
           <Toolbar sx={{ justifyContent: "space-between", px: 3 }}>
             {/* Left-side navigation */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Button
-                component={Link}
-                to="/"
-                color="secondary"
-                startIcon={<Home />}
-                sx={{ textTransform: "none" }}
-              >
-                Home
-              </Button>
               <Button
                 component={Link}
                 to="/dashboard"
